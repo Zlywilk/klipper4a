@@ -21,7 +21,7 @@ sudo apk add git unzip  libffi-dev make gcc g++ \
 ncurses-dev avrdude gcc-avr binutils-avr \
 python3 py3-virtualenv \
 python3-dev freetype-dev fribidi-dev harfbuzz-dev jpeg-dev lcms2-dev openjpeg-dev tcl-dev tiff-dev tk-dev zlib-dev \
-jq udev curl-dev libressl-dev curl libsodium iproute2 patch
+jq udev curl-dev libressl-dev curl libsodium iproute2 patch screen
 
 
 ################################################################################
@@ -130,18 +130,20 @@ read -p "choose GUI fluidd(1) or  mainsail(2)" -r CLIENT
 case $CLIENT in
   1 | fluidd)
   CLIENT="fluidd"
-    curl -sL https://api.github.com/repos/cadriel/fluidd/releases | jq -r ".[0].assets[0].browser_download_url"
+    CLIENT_RELEASE_URL=$(curl -sL https://api.github.com/repos/cadriel/fluidd/releases | jq -r ".[0].assets[0].browser_download_url")
     ;;
   2 | mainsail)
   CLIENT="mainsail"
-    curl -sL https://api.github.com/repos/meteyou/mainsail/releases | jq -r ".[0].assets[0].browser_download_url"
+    CLIENT_RELEASE_URL=$(curl -sL https://api.github.com/repos/meteyou/mainsail/releases | jq -r ".[0].assets[0].browser_download_url")
     ;;
   *)
     echo "Unknown client $CLIENT (choose fluidd or mainsail)"
     exit 2
     ;;
 esac
-
+test -d $CLIENT_PATH && rm -rf $CLIENT_PATH
+mkdir -p $CLIENT_PATH
+(cd $CLIENT_PATH && wget -q -O $CLIENT.zip $CLIENT_RELEASE_URL && unzip $CLIENT.zip && rm $CLIENT.zip)
 read -p 'set trust ip [192.168.0.0/24 ip2 ]: ' -r TRUSTIP
 if  [[ "$TRUSTIP" == *" "* ]]
 then
@@ -150,13 +152,14 @@ fi
 cat > "$HOME"/moonraker.conf <<EOF
 [server]
 host: 0.0.0.0
-config_path: $CONFIG_PATH
 [authorization]
 trusted_clients:
   $TRUSTIP
 [octoprint_compat]
 [update_manager]
 enable_system_updates: False
+[file_manager]
+config_path: $CONFIG_PATH
 EOF
 
 if [ "$CLIENT" = "fluidd" ] 
@@ -195,16 +198,18 @@ fi
 printf "${COL}install NGINX\n${NC}"
 sudo apk add nginx
 CLIENT=$(echo "$CLIENT" | tr '[:upper:]' '[:lower:]')
-sudo touch /var/log/nginx/"$CLIENT"-access.log && sudo chown -R "$USER":"$USER" /var/log/nginx/"$CLIENT"-access.log
-sudo touch /var/log/nginx/"$CLIENT"-error.log && sudo chown -R "$USER":"$USER" /var/log/nginx/"$CLIENT"-error.log
+sudo touch /var/log/nginx/$CLIENT-access.log && sudo chown -R "$USER":"$USER" /var/log/nginx/$CLIENT-access.log
+sudo touch /var/log/nginx/$CLIENT-error.log && sudo chown -R "$USER":"$USER" /var/log/nginx/$CLIENT-error.log
 sudo touch /var/run/nginx.pid && sudo chown -R "$USER":"$USER" /var/run/nginx.pid
-sudo touch /var/log/nginx/error.log  && sudo chown -R "$USER":"$USER" /var/log/nginx/error.log
+sudo touch /var/lib/nginx/logs/error.log  && sudo chown -R "$USER":"$USER" /var/lib/nginx/logs/error.log
+sudo touch /var/log/nginx/access.log && sudo chown -R "$USER":"$USER" /var/lib/nginx/logs/access.log
+sudo chown -R "$USER":"$USER" /var/lib/nginx
 sudo tee /etc/nginx/http.d/default.conf <<EOF
 server {
-    listen 8080;
+    listen 8080 default_server;
 
-    access_log /var/log/nginx/"$CLIENT"-access.log;
-    error_log /var/log/nginx/"$CLIENT"-error.log;
+    access_log /var/log/nginx/$CLIENT-access.log;
+    error_log /var/log/nginx/$CLIENT-error.log;
 
     # disable this section on smaller hardware like a pi zero
     gzip on;
@@ -216,7 +221,7 @@ server {
     gzip_http_version 1.1;
     gzip_types text/plain text/css text/xml text/javascript application/javascript application/x-javascript application/json application/xml;
 
-    # web_path from <<UI>> static files
+    # web_path from mainsail static files
     root /home/$USER/www;
 
     index index.html;
@@ -229,52 +234,100 @@ server {
     proxy_request_buffering off;
 
     location / {
-    try_files \$uri \$uri/ /index.html;
+        try_files \$uri \$uri/ /index.html;
     }
-EOF
-sudo iptables -t nat -A OUTPUT -o lo -p tcp --dport 80 -j REDIRECT --to-port 8080
 
-sudo sed -i '/^http.*/a \
+    location = /index.html {
+        add_header Cache-Control "no-store, no-cache, must-revalidate";
+    }
+
+    location /websocket {
+        proxy_pass http://apiserver/websocket;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection \$connection_upgrade;
+        proxy_set_header Host \$http_host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_read_timeout 86400;
+    }
+
+    location ~ ^/(printer|api|access|machine|server)/ {
+        proxy_pass http://apiserver$request_uri;
+        proxy_set_header Host \$http_host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Scheme \$scheme;
+    }
+	
+    location /webcam/ {
+        proxy_pass http://mjpgstreamer1/;
+    }
+
+    location /webcam2/ {
+        proxy_pass http://mjpgstreamer2/;
+    }
+
+    location /webcam3/ {
+        proxy_pass http://mjpgstreamer3/;
+    }
+
+    location /webcam4/ {
+        proxy_pass http://mjpgstreamer4/;
+    }
+}
+EOF
+sudo iptables -t nat -A OUTPUT -o lo -p tcp --dport 8080 -j REDIRECT --to-port 80
+
+if  ! grep -q mjpgstreamer1 /etc/nginx/nginx.conf;
+then
+sudo sed -i 's/user nginx;//g' /etc/nginx/nginx.conf
+
+sudo sed -i "/^http.*/a \
 map \$http_upgrade \$connection_upgrade { \
     default upgrade; \
-    ''      close; \
+    \'\'      close; \
     } \
 upstream apiserver {\
     ip_hash;\
-    server $IP:7125;\
+    server "$IP":7125;\
 }\
 \
 upstream mjpgstreamer1 {\
     ip_hash;\
-    server $IP:8080;\
+    server "$IP":8080;\
 }\
 \
 upstream mjpgstreamer2 {\
     ip_hash;\
-    server $IP:8081;\
+    server "$IP":8081;\
 }\
 \
 upstream mjpgstreamer3 {\
     ip_hash;\
-    server $IP:8082;\
+    server "$IP":8082;\
 }\
 \
 upstream mjpgstreamer4 {\
     ip_hash;\
-    server $IP:8083;\
-}' /etc/nginx/nginx.conf
+    server "$IP":8083;\
+}" /etc/nginx/nginx.conf
 echo "pid        /var/run/nginx.pid;" | sudo tee -a /etc/nginx/nginx.conf
+fi
 
 cat > "$HOME"/start.sh <<EOF
 #!/bin/sh
 OLDIP=\$(cat /etc/nginx/nginx.conf |grep "server " |cut -d ':' -f1 |tail -n1 |awk '{print \$2}')
 IP=\$(ip route get 8.8.8.8 | sed -n 's|^.*src \(.*\)$|\1|gp' ||awk '{print \$1}')
-if [\$IP != \$OLDIP] then
+if [[ "\$IP" != "\$OLDIP" ]] 
+then
 sudo sed -i 's/\$OLDIP/\$IP/g' /etc/nginx/nginx.conf
 fi
-$MOONRAKER_VENV_PATH/bin/python $MOONRAKER_PATH/moonraker/moonraker.py&
-$KLIPPY_VENV_PATH/bin/python  $KLIPPER_PATH/klippy/klippy.py $CONFIG_PATH/printer.cfg -l /tmp/klippy.log -a /tmp/klippy_uds&
-nginx&
+
+screen -d -m -S moonraker /home/android/venv/moonraker/bin/python /home/android/moonraker/moonraker/moonraker.py&
+screen -d -m -S klippy /home/android/venv/klippy/bin/python  /home/android/klipper/klippy/klippy.py /home/android/config/printer.cfg -l /tmp/klippy.log -a /tmp/klippy_uds&
+screen -d -m -S nginx nginx&
+
 EOF
 chmod +x start.sh
 sh start.sh
