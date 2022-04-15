@@ -267,10 +267,10 @@ echo "pid        /var/run/nginx.pid;" | sudo tee -a /etc/nginx/nginx.conf
 
 cat > "$HOME"/start.sh <<EOF
 #!/bin/sh
-OLDIP=cat /etc/nginx/nginx.conf |grep "server " |cut -d ':' -f1 |tail -n1 |awk '{print $2}'
-IP=$(ip route get 8.8.8.8 | sed -n 's|^.*src \(.*\)$|\1|gp' ||awk '{print $1}')
-if [$IP != $OLDIP] then
-sudo sed -i 's/$OLDIP/$IP/g' /etc/nginx/nginx.conf
+OLDIP=\$(cat /etc/nginx/nginx.conf |grep "server " |cut -d ':' -f1 |tail -n1 |awk '{print $2}')
+IP=\$(ip route get 8.8.8.8 | sed -n 's|^.*src \(.*\)$|\1|gp' ||awk '{print $1}')
+if [\$IP != \$OLDIP] then
+sudo sed -i 's/\$OLDIP/\$IP/g' /etc/nginx/nginx.conf
 fi
 $MOONRAKER_VENV_PATH/bin/python $MOONRAKER_PATH/moonraker/moonraker.py&
 $KLIPPY_VENV_PATH/bin/python  $KLIPPER_PATH/klippy/klippy.py $CONFIG_PATH/printer.cfg -l /tmp/klippy.log -a /tmp/klippy_uds&
