@@ -10,6 +10,7 @@ this script is for easy install kilpper gui (fluidd or Mainsail) for android bas
 + otg cable or usb hub
 ## set linuxdeploy
 + select description(alpine)
++ Distribution suite (last-stable[if you want compile on the phone])
 + set password
 + enable ssh
 at the settings menu 
@@ -21,7 +22,7 @@ at the settings menu
 curl -Ls https://raw.githubusercontent.com/Zlywilk/klipper4a/master/moonraker-android.sh
 ```
 + edit script using your favorite editor to add printer config (if you want nano use sudo apk add nano)
-+ android does`t support serial by id set serial to /dev/ttyA**
++ android doesn't support serial by id set serial to /dev/ttyA**
 + run script 
 ```bash
 sh moonraker-android.sh
@@ -43,3 +44,4 @@ sh moonraker-android.sh
 + [Arksine](https://github.com/Arksine) for moonraker
 + [Cadriel](https://github.com/fluidd-core) for fluidd
 + [Mainsail-Crew](https://github.com/mainsail-crew) for mainsail
++ [lllgts](https://github.com/lllgts) for custom kernel for lg V30
