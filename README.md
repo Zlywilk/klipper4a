@@ -47,6 +47,14 @@ sh moonraker-android.sh
 
 **A:** there is one method (proot) which you can run linux on android whitout root but doesn't support mmap which is essential to run moonraker
 
+## Disclaimer
+
+```
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+```
+
+TL;DR: If your house burns down because this app malfunctioned, you cannot sue me.
+
 ## special thanks
 + [feelfreelinux](https://github.com/feelfreelinux) for octo4a
 + [knoopx](https://github.com/knoopx) for alpine-klipper
