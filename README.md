@@ -1,31 +1,31 @@
 
 # klipper4a (chroot install script)  
 
-this script is for easy install kilpper gui (fluidd or Mainsail) on android based on [alpine-klipper](https://github.com/knoopx/alpine-klipper)
+this script is for easy install kilpper gui (fluidd or Mainsail) for android based on [alpine-klipper](https://github.com/knoopx/alpine-klipper)
 
 ## requirements
-+ phone(rooted)
-+ sdcard
-+ custiom kernel (sometimes if doesn't support serial drivers)
-+ chroot( I recomended [linuxdeploy](https://github.com/meefik/linuxdeploy))
++ phone (rooted)
++ sd card
++ custiom kernel (sometimes if not support by serial drivers)
++ chroot (I recomend [linuxdeploy](https://github.com/meefik/linuxdeploy))
 + otg cable or usb hub
 
 ## set linuxdeploy
-+ select description(alpine)
-+ Distribution suite (last-stable[if you want compile on the phone])
++ select distribution (alpine)
++ Distribution suite (last-stable[if you want compile kilpper on a phone])
 + set password
 + enable ssh
-at the settings menu 
+in the settings menu 
 + check Lock wifi
 + check Wake lock
-+ at right corner menu click install
++ in top right corner menu click install
 
 ## login to ssh
 ```bash
 curl -O https://raw.githubusercontent.com/Zlywilk/klipper4a/master/moonraker-android.sh
 ```
-+ edit script using your favorite editor to add printer config (if you want nano use sudo apk add nano)
-+ android doesn't support serial by id set serial to /dev/ttyA**
++ edit script using your favorite editor to add printer config (if you want nano use "sudo apk add nano")
++ android doesn't support serial by id therefore set serial to "/dev/ttyA**"
 + run script 
 ```bash
 sh moonraker-android.sh
@@ -35,8 +35,8 @@ sh moonraker-android.sh
 ```bash
 ./start.sh
 ```
-## TO-DO
-+ write script  for auto updating serial if change
+## Future features
++ write script  for auto update if serial is changed
 + port klipper scereen for alpine
 + add update support for alpine in moonraker
 + write debian script
