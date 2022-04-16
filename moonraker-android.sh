@@ -53,7 +53,7 @@ then
 path: $GCODE_PATH
 EOL
 fi
-read -p "Would you like to use Display status in GUI?[y/n]" -n 1 -r
+read -p "Would you like to add Display status in GUI?[y/n]" -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]
 then
@@ -61,7 +61,7 @@ then
 [display_status]
 EOL
 fi
-read -p "Would you like to  use  pause and resume?[y/n]" -n 1 -r
+read -p "Would you like to  add pause and resume?[y/n]" -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]
 then
@@ -104,7 +104,7 @@ gcode:
   {% endif %} 
 EOL
 fi
-read -p "Would you like to use add cancel macro?[y/n]" -n 1 -r
+read -p "Would you like to add cancel macro?[y/n]" -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]
 then
