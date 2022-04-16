@@ -1,7 +1,7 @@
 
 # klipper4a (chroot install script)  
 
-this script is for easy install kilpper gui (fluidd or Mainsail) for android based on [alpine-klipper](https://github.com/knoopx/alpine-klipper)
+this script is for easy install kilpper gui (fluidd or Mainsail) on android based on [alpine-klipper](https://github.com/knoopx/alpine-klipper)
 
 ## requirements
 + phone(rooted)
