@@ -50,6 +50,7 @@ sh moonraker-android.sh
 ## special thanks
 + [feelfreelinux](https://github.com/feelfreelinux) for octo4a
 + [knoopx](https://github.com/knoopx) for alpine-klipper
++ [meefik](https://github.com/meefik) for linuxdeploy
 + [Arksine](https://github.com/Arksine) for moonraker
 + [Cadriel](https://github.com/fluidd-core) for fluidd
 + [Mainsail-Crew](https://github.com/mainsail-crew) for mainsail
