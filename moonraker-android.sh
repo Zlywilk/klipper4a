@@ -44,7 +44,7 @@ source "$KLIPPY_VENV_PATH"/bin/activate
 cat > "$CONFIG_PATH"/printer.cfg <<EOF
 # replace with your config
 EOF
-read -p "Would you like use virtual card?[y/n]" -n 1 -r
+read -p "Would you like to use virtual card?[y/n]" -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]
 then
@@ -53,7 +53,7 @@ then
 path: $GCODE_PATH
 EOL
 fi
-read -p "Would you like use Display status in GUI?[y/n]" -n 1 -r
+read -p "Would you like to use Display status in GUI?[y/n]" -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]
 then
@@ -61,7 +61,7 @@ then
 [display_status]
 EOL
 fi
-read -p "Would you like use pause and resume?[y/n]" -n 1 -r
+read -p "Would you like to  use  pause and resume?[y/n]" -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]
 then
@@ -104,7 +104,7 @@ gcode:
   {% endif %} 
 EOL
 fi
-read -p "Would you like use add cancel macro?[y/n]" -n 1 -r
+read -p "Would you like to use add cancel macro?[y/n]" -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]
 then
@@ -178,7 +178,7 @@ repo: mainsail-crew/mainsail
 path: ~/www
 EOL
 fi
-read -p "Would you like use add domains?[y/n]" -n 1 -r
+read -p "Would you like to add domains?[y/n]" -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]
 then
