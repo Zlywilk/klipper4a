@@ -11,8 +11,44 @@
 : "${MOONRAKER_VENV_PATH:="$HOME/venv/moonraker"}"
 
 : "${CLIENT_PATH:="$HOME/www"}"
-: "${IP=$(ip route get 8.8.8.8 | sed -n 's|^.*src \(.*\)$|\1|gp' |awk '{print $1}')}"
+: "${IP:=$(ip route get 8.8.8.8 | sed -n 's|^.*src \(.*\)$|\1|gp' |awk '{print $1}')}"
+: "${SERIAL:="/dev/ttyACM0"}"
+COL='\033[1;32m'
+RED='\033[0;31m'
+NC='\033[0m'
+if [ -e "$SERIAL" ]; then
+if [[ $(ls -l "$SERIAL" | awk '{print $4}') = "root" ]]
+then
+    printf "${COL}fix permissions\n${NC}"
+    sudo chown -R "$USER":"$USER" "$SERIAL"
+fi
+cat > "$HOME"/start.sh <<EOF
+#!/bin/sh
+: "\${SERIAL:=$SERIAL}"
+COL='\033[1;32m'
+RED='\033[0;31m'
+NC='\033[0m'
+if [[ \$(ls -l "\$SERIAL" | awk '{print \$4}') = "root" ]]
+then
+    printf "\${COL}fix permissions\n\${NC}"
+    sudo chown -R "\$USER":"\$USER" "\$SERIAL"
+fi
+OLDIP=\$(cat /etc/nginx/nginx.conf |grep "server " |cut -d ':' -f1 |tail -n1 |awk '{print \$2}')
+IP=\$(ip route get 8.8.8.8 | sed -n 's|^.*src \(.*\)$|\1|gp' ||awk '{print \$1}')
+if [[ "\$IP" != "\$OLDIP" ]] 
+then
+sudo sed -i 's/\$OLDIP/\$IP/g' /etc/nginx/nginx.conf
+fi
 
+screen -d -m -S moonraker /home/android/venv/moonraker/bin/python /home/android/moonraker/moonraker/moonraker.py
+screen -d -m -S klippy /home/android/venv/klippy/bin/python  /home/android/klipper/klippy/klippy.py /home/android/config/printer.cfg -l /tmp/klippy.log -a /tmp/klippy_uds
+screen -d -m -S nginx nginx
+
+EOF
+else 
+printf "${RED}serial not found edit line 15 or connect printer and rerun script\n${NC}"
+exit
+fi
 ################################################################################
 # PRE
 ################################################################################
@@ -141,9 +177,9 @@ case $CLIENT in
     exit 2
     ;;
 esac
-test -d $CLIENT_PATH && rm -rf $CLIENT_PATH
-mkdir -p $CLIENT_PATH
-(cd $CLIENT_PATH && wget -q -O $CLIENT.zip $CLIENT_RELEASE_URL && unzip $CLIENT.zip && rm $CLIENT.zip)
+test -d "$CLIENT_PATH" && rm -rf "$CLIENT_PATH"
+mkdir -p "$CLIENT_PATH"
+(cd "$CLIENT_PATH" && wget -q -O $CLIENT.zip "$CLIENT_RELEASE_URL" && unzip $CLIENT.zip && rm $CLIENT.zip)
 read -p 'set trust ip [192.168.0.0/24 ip2 ]: ' -r TRUSTIP
 if  [[ "$TRUSTIP" == *" "* ]]
 then
@@ -198,8 +234,8 @@ fi
 printf "${COL}install NGINX\n${NC}"
 sudo apk add nginx
 CLIENT=$(echo "$CLIENT" | tr '[:upper:]' '[:lower:]')
-sudo touch /var/log/nginx/$CLIENT-access.log && sudo chown -R "$USER":"$USER" /var/log/nginx/$CLIENT-access.log
-sudo touch /var/log/nginx/$CLIENT-error.log && sudo chown -R "$USER":"$USER" /var/log/nginx/$CLIENT-error.log
+sudo touch /var/log/nginx/"$CLIENT"-access.log && sudo chown -R "$USER":"$USER" /var/log/nginx/"$CLIENT"-access.log
+sudo touch /var/log/nginx/"$CLIENT"-error.log && sudo chown -R "$USER":"$USER" /var/log/nginx/"$CLIENT"-error.log
 sudo touch /var/run/nginx.pid && sudo chown -R "$USER":"$USER" /var/run/nginx.pid
 sudo touch /var/lib/nginx/logs/error.log  && sudo chown -R "$USER":"$USER" /var/lib/nginx/logs/error.log
 sudo touch /var/log/nginx/access.log && sudo chown -R "$USER":"$USER" /var/lib/nginx/logs/access.log
@@ -290,44 +326,30 @@ map \$http_upgrade \$connection_upgrade { \
     } \
 upstream apiserver {\
     ip_hash;\
-    server "$IP":7125;\
+    server ""$IP"":7125;\
 }\
 \
 upstream mjpgstreamer1 {\
     ip_hash;\
-    server "$IP":8080;\
+    server ""$IP"":8080;\
 }\
 \
 upstream mjpgstreamer2 {\
     ip_hash;\
-    server "$IP":8081;\
+    server ""$IP"":8081;\
 }\
 \
 upstream mjpgstreamer3 {\
     ip_hash;\
-    server "$IP":8082;\
+    server ""$IP"":8082;\
 }\
 \
 upstream mjpgstreamer4 {\
     ip_hash;\
-    server "$IP":8083;\
+    server ""$IP"":8083;\
 }" /etc/nginx/nginx.conf
 echo "pid        /var/run/nginx.pid;" | sudo tee -a /etc/nginx/nginx.conf
 fi
 
-cat > "$HOME"/start.sh <<EOF
-#!/bin/sh
-OLDIP=\$(cat /etc/nginx/nginx.conf |grep "server " |cut -d ':' -f1 |tail -n1 |awk '{print \$2}')
-IP=\$(ip route get 8.8.8.8 | sed -n 's|^.*src \(.*\)$|\1|gp' ||awk '{print \$1}')
-if [[ "\$IP" != "\$OLDIP" ]] 
-then
-sudo sed -i 's/\$OLDIP/\$IP/g' /etc/nginx/nginx.conf
-fi
-
-screen -d -m -S moonraker /home/android/venv/moonraker/bin/python /home/android/moonraker/moonraker/moonraker.py&
-screen -d -m -S klippy /home/android/venv/klippy/bin/python  /home/android/klipper/klippy/klippy.py /home/android/config/printer.cfg -l /tmp/klippy.log -a /tmp/klippy_uds&
-screen -d -m -S nginx nginx&
-
-EOF
 chmod +x start.sh
 sh start.sh
