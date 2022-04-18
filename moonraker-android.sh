@@ -12,7 +12,16 @@
 
 : "${CLIENT_PATH:="$HOME/www"}"
 : "${IP:=$(ip route get 8.8.8.8 | sed -n 's|^.*src \(.*\)$|\1|gp' |awk '{print $1}')}"
-: "${SERIAL:="/dev/ttyACM0"}"
+findserial() {
+for f in /dev/tty*;
+do
+if [ "$(udevadm info -a -n "${f}" | grep "{manufacturer}" | head -n1|cut -d== -f3|tr -d '"'=="klipper")" ]
+then
+SERIAL="$f"
+fi
+done;
+}
+findserial
 COL='\033[1;32m'
 RED='\033[0;31m'
 NC='\033[0m'
@@ -22,31 +31,56 @@ then
     printf "${COL}fix permissions\n${NC}"
     sudo chown -R "$USER":"$USER" "$SERIAL"
 fi
-cat > "$HOME"/start.sh <<EOF
+cat > "$HOME"/watchperm.sh <<EOF
 #!/bin/sh
-: "\${SERIAL:=$SERIAL}"
-COL='\033[1;32m'
-RED='\033[0;31m'
-NC='\033[0m'
+findserial() {
+for f in /dev/tty*;
+do
+if [ "\$(udevadm info -a -n "\${f}" | grep "{manufacturer}" | head -n1|cut -d== -f3|tr -d '"'=="klipper")" ]
+then
+SERIAL="\$f"
+fi
+done;
+}
+findserial
 if [[ \$(ls -l "\$SERIAL" | awk '{print \$4}') = "root" ]]
 then
-    printf "\${COL}fix permissions\n\${NC}"
     sudo chown -R "\$USER":"\$USER" "\$SERIAL"
 fi
-OLDIP=\$(cat /etc/nginx/nginx.conf |grep "server " |cut -d ':' -f1 |tail -n1 |awk '{print \$2}')
+EOF
+chmod +x watchperm.sh
+cat > "$HOME"/start.sh <<EOF
+#!/bin/sh
+findserial() {
+for f in /dev/tty*;
+do
+if [ "\$(udevadm info -a -n "\${f}" | grep "{manufacturer}" | head -n1|cut -d== -f3|tr -d '"'=="klipper")" ]
+then
+SERIAL="\$f"
+fi
+done;
+}
+findserial
+OLDSERIAL=\$(cat config/printer.cfg  |grep "serial:" |cut -d":" -f2)
+OLDIP=\$(cat /etc/nginx/nginx.conf |grep "server " |cut -d ':' -f1 |tail -n1 |awk '{print \$6}')
 IP=\$(ip route get 8.8.8.8 | sed -n 's|^.*src \(.*\)$|\1|gp' ||awk '{print \$1}')
-if [[ "\$IP" != "\$OLDIP" ]] 
+if [[ "\$IP" != "\$OLDIP" ]]
 then
 sudo sed -i 's/\$OLDIP/\$IP/g' /etc/nginx/nginx.conf
 fi
+if [[ "\$SERIAL" != "\$OLDSERIAL" ]]
+then
+sed -i -e "s|\$OLDSERIAL|\$SERIAL|g" config/printer.cfg
+fi
 
+screen -d -m -S permcheck watch -n 10 "$HOME"/watchperm.sh
 screen -d -m -S moonraker /home/android/venv/moonraker/bin/python /home/android/moonraker/moonraker/moonraker.py
 screen -d -m -S klippy /home/android/venv/klippy/bin/python  /home/android/klipper/klippy/klippy.py /home/android/config/printer.cfg -l /tmp/klippy.log -a /tmp/klippy_uds
 screen -d -m -S nginx nginx
 
 EOF
-else 
-printf "${RED}serial not found edit line 15 or connect printer and rerun script\n${NC}"
+else
+printf "${RED}connect printer and rerun script\n${NC}"
 exit
 fi
 ################################################################################
@@ -137,7 +171,7 @@ gcode:
     G1 X{x_park} Y{y_park} F6000
   {% else %}
     {action_respond_info("Printer not homed")}
-  {% endif %} 
+  {% endif %}
 EOL
 fi
 read -p "Would you like to add cancel macro?[y/n]" -n 1 -r
@@ -198,7 +232,7 @@ enable_system_updates: False
 config_path: $CONFIG_PATH
 EOF
 
-if [ "$CLIENT" = "fluidd" ] 
+if [ "$CLIENT" = "fluidd" ]
 then
   cat >> "$HOME"/moonraker.conf <<EOL
 [update_manager client fluidd]
@@ -295,7 +329,7 @@ server {
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Scheme \$scheme;
     }
-	
+
     location /webcam/ {
         proxy_pass http://mjpgstreamer1/;
     }
