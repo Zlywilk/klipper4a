@@ -25,7 +25,7 @@ in the settings menu
 curl -O https://raw.githubusercontent.com/Zlywilk/klipper4a/master/moonraker-android.sh
 ```
 + edit script using your favorite editor to add printer config (if you want nano use "sudo apk add nano")
-+ android doesn't support serial by id therefore set serial to "/dev/ttyA**"
++ set serial to "$SERIAL" 
 + run script 
 ```bash
 sh moonraker-android.sh
@@ -36,7 +36,7 @@ sh moonraker-android.sh
 ./start.sh
 ```
 ## Future features
-+ write script  for auto update if serial is changed
+- [x] write script  for auto update if serial is changed
 + port klipper scereen for alpine
 + add update support for alpine in moonraker
 + write debian script
