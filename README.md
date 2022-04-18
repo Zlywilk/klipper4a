@@ -36,7 +36,7 @@ sh moonraker-android.sh
 ./start.sh
 ```
 ## Future features
-- [x] write script  for auto update if serial is changed
++ [x] write script  for auto update if serial is changed
 + port klipper scereen for alpine
 + add update support for alpine in moonraker
 + write debian script
