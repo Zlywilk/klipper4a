@@ -37,7 +37,6 @@ sh moonraker-android.sh
 ```
 ## Future features
 + [x] write script  for auto update if serial is changed
-+ port klipper scereen for alpine
 + add update support for alpine in moonraker
 + write debian script
 + write native app for android
