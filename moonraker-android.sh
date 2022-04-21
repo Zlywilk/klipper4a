@@ -11,11 +11,13 @@
 : "${MOONRAKER_VENV_PATH:="$HOME/venv/moonraker"}"
 
 : "${CLIENT_PATH:="$HOME/www"}"
-: "${IP:=$(ip route get 8.8.8.8 | sed -n 's|^.*src \(.*\)$|\1|gp' |awk '{print $1}')}"
+: "${IP:=$(ip route get 8.8.8.8 |grep -E -o "([0-9]{1,3}[\.]){3}[0-9]{1,3}" |tail -1)}"
+: "${BOARDMANUFACTURER:="klipper"}"
+sudo apk add 	eudev
 findserial() {
 for f in /dev/tty*;
 do
-if [ "$(udevadm info -a -n "${f}" | grep "{manufacturer}" | head -n1|cut -d== -f3|tr -d '"'=="klipper")" ]
+if [ "$(udevadm info -a -n "${f}" | grep "{manufacturer}" | head -n1|cut -d== -f3|tr -d '"'=="$BOARDMANUFACTURER")" ]
 then
 SERIAL="$f"
 fi
@@ -33,10 +35,11 @@ then
 fi
 cat > "$HOME"/watchperm.sh <<EOF
 #!/bin/sh
+: \"\${BOARDMANUFACTURER:=\""$BOARDMANUFACTURER"\"}\"
 findserial() {
 for f in /dev/tty*;
 do
-if [ "\$(udevadm info -a -n "\${f}" | grep "{manufacturer}" | head -n1|cut -d== -f3|tr -d '"'=="klipper")" ]
+if [ "\$(udevadm info -a -n "\${f}" | grep "{manufacturer}" | head -n1|cut -d== -f3|tr -d '"'=="\$BOARDMANUFACTURER")" ]
 then
 SERIAL="\$f"
 fi
@@ -51,10 +54,11 @@ EOF
 chmod +x watchperm.sh
 cat > "$HOME"/start.sh <<EOF
 #!/bin/sh
+: \"\${BOARDMANUFACTURER:=\""$BOARDMANUFACTURER"\"}\"
 findserial() {
 for f in /dev/tty*;
 do
-if [ "\$(udevadm info -a -n "\${f}" | grep "{manufacturer}" | head -n1|cut -d== -f3|tr -d '"'=="klipper")" ]
+if [ "\$(udevadm info -a -n "\${f}" | grep "{manufacturer}" | head -n1|cut -d== -f3|tr -d '"'==\""\$BOARDMANUFACTURER"\")" ]
 then
 SERIAL="\$f"
 fi
@@ -62,15 +66,15 @@ done;
 }
 findserial
 OLDSERIAL=\$(cat config/printer.cfg  |grep "serial:" |cut -d":" -f2)
-OLDIP=\$(cat /etc/nginx/nginx.conf |grep "server " |cut -d ':' -f1 |tail -n1 |awk '{print \$6}')
-IP=\$(ip route get 8.8.8.8 | sed -n 's|^.*src \(.*\)$|\1|gp' ||awk '{print \$1}')
-if [[ "\$IP" != "\$OLDIP" ]]
+OLDIP=\$(cat /etc/nginx/nginx.conf |grep "server " |grep -E -o "([0-9]{1,3}[\.]){3}[0-9]{1,3}" | head -1)
+IP=\$(ip route get 8.8.8.8 |grep -E -o "([0-9]{1,3}[\.]){3}[0-9]{1,3}" |tail -1)
+if [[ "\$OLDIP" != "\$IP" ]]
 then
-sudo sed -i 's/\$OLDIP/\$IP/g' /etc/nginx/nginx.conf
+sudo sed -i "s|\$OLDIP|\$IP|g" /etc/nginx/nginx.conf
 fi
 if [[ "\$SERIAL" != "\$OLDSERIAL" ]]
 then
-sed -i -e "s|\$OLDSERIAL|\$SERIAL|g" config/printer.cfg
+sed -i "s|\$OLDSERIAL|\$SERIAL|g" config/printer.cfg
 fi
 
 screen -d -m -S permcheck watch -n 10 "$HOME"/watchperm.sh
@@ -354,10 +358,6 @@ then
 sudo sed -i 's/user nginx;//g' /etc/nginx/nginx.conf
 
 sudo sed -i "/^http.*/a \
-map \$http_upgrade \$connection_upgrade { \
-    default upgrade; \
-    \'\'      close; \
-    } \
 upstream apiserver {\
     ip_hash;\
     server ""$IP"":7125;\
