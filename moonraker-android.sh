@@ -55,6 +55,7 @@ chmod +x watchperm.sh
 cat > "$HOME"/start.sh <<EOF
 #!/bin/sh
 : \"\${BOARDMANUFACTURER:=\""$BOARDMANUFACTURER"\"}\"
+sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-ports 8085
 findserial() {
 for f in /dev/tty*;
 do
@@ -87,6 +88,11 @@ else
 printf "${RED}connect printer and rerun script\n${NC}"
 exit
 fi
+cat > "$HOME"/stop.sh <<EOF
+#!/bin/sh
+killall screen nginx
+EOF
+chmod +x stop.sh
 ################################################################################
 # PRE
 ################################################################################
@@ -280,12 +286,11 @@ sudo touch /var/log/nginx/access.log && sudo chown -R "$USER":"$USER" /var/lib/n
 sudo chown -R "$USER":"$USER" /var/lib/nginx
 sudo tee /etc/nginx/http.d/default.conf <<EOF
 server {
-    listen 8080 default_server;
+    listen 8085 default_server;
 
     access_log /var/log/nginx/$CLIENT-access.log;
     error_log /var/log/nginx/$CLIENT-error.log;
 
-    # disable this section on smaller hardware like a pi zero
     gzip on;
     gzip_vary on;
     gzip_proxied any;
@@ -351,7 +356,6 @@ server {
     }
 }
 EOF
-sudo iptables -t nat -A OUTPUT -o lo -p tcp --dport 8080 -j REDIRECT --to-port 80
 
 if  ! grep -q mjpgstreamer1 /etc/nginx/nginx.conf;
 then
