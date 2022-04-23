@@ -41,6 +41,38 @@ sh moonraker-android.sh
 + write debian script
 + write native app for android
 
+## camera support
+if you have existing installation edit file /etc/nginx/http.d/default.conf
+change from
+```
+listen 8080 default_server;
+```
+to
+```
+listen 8085 default_server;
+```
+and add to start.sh line after #!/bin/sh
+```
+sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-ports 8085
+```
+now you can vist gui at port 80
+
+### method 1(use low resources but sometimes brake stream)
+download IP Webcam form play store
+<p align="center">
+<a href="https://play.google.com/store/apps/details?id=com.pas.webcam" target="_blank"><img src="https://cdn.rawgit.com/steverichey/google-play-badge-svg/master/img/en_get.svg" width="50%" alt="play store icon"></a>
+</p>
+start ip webcam server
+set camera url to /webcam/video
+
+### method 2
+download CamON Live Streaming form play store
+<p align="center">
+<a href="https://play.google.com/store/apps/details?id=com.spynet.camon" target="_blank"><img src="https://cdn.rawgit.com/steverichey/google-play-badge-svg/master/img/en_get.svg" width="50%" alt="play store icon"></a>
+</p>
+start CamON server
+set camera url to /webcam/video/mjpeg
+
 ## FAQ
 **Q:** why root?
 
