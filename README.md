@@ -1,7 +1,7 @@
 # klipper4a (chroot install script)  
    <p align="center">
    <a aria-label="Discord" href="https://discord.gg/EAdA5kupxt">
-      <img src="https://img.shields.io/discord/758059413700345988?color=%235865F2&label=discord&logo=discord&logoColor=white&style=flat-square">
+      <img src="https://img.shields.io/discord/967461271974846544?color=%235865F2&label=discord&logo=discord&logoColor=white&style=flat-square">
   </a>
     </p>
     
