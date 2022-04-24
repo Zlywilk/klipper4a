@@ -78,7 +78,7 @@ sudo sed -i "s|\$OLDIP|\$IP|g" /etc/nginx/conf.d/upstreams.conf
 fi
 if [[ "\$SERIAL" != "\$OLDSERIAL" ]]
 then
-sed -i "s|\$OLDSERIAL|\$SERIAL|g" config/printer.cfg
+sed -i "s|\$OLDSERIAL| \$SERIAL|g" config/printer.cfg
 fi
 
 screen -d -m -S permcheck watch -n 10 "$HOME"/watchperm.sh
@@ -100,7 +100,7 @@ chmod +x stop.sh
 # PRE
 ################################################################################
 printf "${COL}Installing dependencies...\n${NC}"
-sudo apt install git psmisc libncurses5-dev unzip  libffi-dev make gcc g++ \
+sudo apt install wget git psmisc libncurses5-dev unzip  libffi-dev make gcc g++ \
 ncurses-dev avrdude gcc-avr binutils-avr \
 python-virtualenv python3 python3-virtualenv \
 python3-dev  libfribidi-dev libncurses-dev libcurl4-nss-dev  libharfbuzz-dev libjpeg-dev liblcms2-dev libopenjp2-7-dev tcl-dev libtiff-dev tk-dev zlib1g-dev \
@@ -121,7 +121,8 @@ mkdir -p "$CONFIG_PATH" "$GCODE_PATH"
 touch /tmp/klippy_uds
 test -d "$KLIPPER_PATH "|| git clone "$KLIPPER_REPO" "$KLIPPER_PATH"
 test -d "$KLIPPY_VENV_PATH" || virtualenv -p python3 "$KLIPPY_VENV_PATH"
-./"$KLIPPY_VENV_PATH"/bin/activate
+chmod +x "$KLIPPY_VENV_PATH"/bin/activate
+"$KLIPPY_VENV_PATH"/bin/activate
 "$KLIPPY_VENV_PATH"/bin/pip install --upgrade pip
 "$KLIPPY_VENV_PATH"/bin/pip install -r "$KLIPPER_PATH"/scripts/klippy-requirements.txt
 cat > "$CONFIG_PATH"/printer.cfg <<EOF
@@ -206,7 +207,8 @@ fi
 printf "${COL}install MOONRAKER\n${NC}"
 test -d "$MOONRAKER_PATH"|| git clone "$MOONRAKER_REPO" "$MOONRAKER_PATH"
 test -d "$MOONRAKER_VENV_PATH" || virtualenv -p python3 "$MOONRAKER_VENV_PATH"
-./"$MOONRAKER_VENV_PATH"/bin/activate
+chmod +x "$MOONRAKER_VENV_PATH"/bin/activate
+"$MOONRAKER_VENV_PATH"/bin/activate
 "$MOONRAKER_VENV_PATH"/bin/pip install --upgrade pip
 "$MOONRAKER_VENV_PATH"/bin/pip install -r "$MOONRAKER_PATH"/scripts/moonraker-requirements.txt
 read -p "choose GUI fluidd(1) or  mainsail(2)" -r CLIENT
