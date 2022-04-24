@@ -111,7 +111,7 @@ jq udev libssl-dev curl libsodium-dev iproute2 patch screen
 # KLIPPER
 ################################################################################
 printf "${COL}install KLIPPER\n${NC}"
-read -p "Would you like compile klipper on the phone(works only on alpine last)?[y/n]" -n 1 -r
+read -p "Would you like compile klipper on the phone?[y/n]" -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]
 then

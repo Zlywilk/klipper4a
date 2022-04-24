@@ -20,6 +20,7 @@ this script is for easy install kilpper gui (fluidd or Mainsail) for android bas
 + Distribution suite (last-stable[if you want compile kilpper on a phone])
 + set password
 + enable ssh
+if you use debian set image size
 in the settings menu 
 + check Lock wifi
 + check Wake lock
