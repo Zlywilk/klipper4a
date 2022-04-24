@@ -13,11 +13,10 @@
 : "${CLIENT_PATH:="$HOME/www"}"
 : "${IP:=$(ip route get 8.8.8.8 |grep -E -o "([0-9]{1,3}[\.]){3}[0-9]{1,3}" |tail -1)}"
 : "${BOARDMANUFACTURER:="klipper"}"
-sudo apk add 	eudev
 findserial() {
 for f in /dev/tty*;
 do
-if [ "$(udevadm info -a -n "${f}" | grep "{manufacturer}" | head -n1|cut -d== -f3|tr -d '"'=="$BOARDMANUFACTURER")" ]
+if [ "$(udevadm info -a -n "${f}" | grep "{manufacturer}" | head -n1|cut -d= -f3|tr -d '"'=="$BOARDMANUFACTURER")" ]
 then
 SERIAL="$f"
 fi
@@ -39,7 +38,7 @@ cat > "$HOME"/watchperm.sh <<EOF
 findserial() {
 for f in /dev/tty*;
 do
-if [ "\$(udevadm info -a -n "\${f}" | grep "{manufacturer}" | head -n1|cut -d== -f3|tr -d '"'=="\$BOARDMANUFACTURER")" ]
+if [ "\$(udevadm info -a -n "\${f}" | grep "{manufacturer}" | head -n1|cut -d= -f3|tr -d '"'=="\$BOARDMANUFACTURER")" ]
 then
 SERIAL="\$f"
 fi
@@ -52,14 +51,17 @@ then
 fi
 EOF
 chmod +x watchperm.sh
+sudo update-alternatives --set iptables /usr/sbin/iptables-legacy
+echo "PATH=/usr/sbin:$PATH" | tee -a .bashrc
 cat > "$HOME"/start.sh <<EOF
 #!/bin/bash
+
 : \"\${BOARDMANUFACTURER:=\""$BOARDMANUFACTURER"\"}\"
 sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-ports 8085
 findserial() {
 for f in /dev/tty*;
 do
-if [ "\$(udevadm info -a -n "\${f}" | grep "{manufacturer}" | head -n1|cut -d== -f3|tr -d '"'==\""\$BOARDMANUFACTURER"\")" ]
+if [ "\$(udevadm info -a -n "\${f}" | grep "{manufacturer}" | head -n1|cut -d= -f3|tr -d '"'==\""\$BOARDMANUFACTURER"\")" ]
 then
 SERIAL="\$f"
 fi
@@ -67,11 +69,12 @@ done;
 }
 findserial
 OLDSERIAL=\$(cat config/printer.cfg  |grep "serial:" |cut -d":" -f2)
-OLDIP=\$(cat /etc/nginx/nginx.conf |grep "server " |grep -E -o "([0-9]{1,3}[\.]){3}[0-9]{1,3}" | head -1)
+OLDIP=\$(cat /etc/nginx/conf.d/upstreams.conf |grep "server " |grep -E -o "([0-9]{1,3}[\.]){3}[0-9]{1,3}" | head -1)
 IP=\$(ip route get 8.8.8.8 |grep -E -o "([0-9]{1,3}[\.]){3}[0-9]{1,3}" |tail -1)
+
 if [[ "\$OLDIP" != "\$IP" ]]
 then
-sudo sed -i "s|\$OLDIP|\$IP|g" /etc/nginx/nginx.conf
+sudo sed -i "s|\$OLDIP|\$IP|g" /etc/nginx/conf.d/upstreams.conf
 fi
 if [[ "\$SERIAL" != "\$OLDSERIAL" ]]
 then
@@ -97,11 +100,11 @@ chmod +x stop.sh
 # PRE
 ################################################################################
 printf "${COL}Installing dependencies...\n${NC}"
-sudo apk add git unzip  libffi-dev make gcc g++ \
+sudo apt install git psmisc libncurses5-dev unzip  libffi-dev make gcc g++ \
 ncurses-dev avrdude gcc-avr binutils-avr \
-python3 py3-virtualenv \
-python3-dev freetype-dev fribidi-dev harfbuzz-dev jpeg-dev lcms2-dev openjpeg-dev tcl-dev tiff-dev tk-dev zlib-dev \
-jq udev curl-dev libressl-dev curl libsodium iproute2 patch screen
+python-virtualenv python3 python3-virtualenv \
+python3-dev  libfribidi-dev libncurses-dev libcurl4-nss-dev  libharfbuzz-dev libjpeg-dev liblcms2-dev libopenjp2-7-dev tcl-dev libtiff-dev tk-dev zlib1g-dev \
+jq udev libssl-dev curl libsodium-dev iproute2 patch screen
 
 
 ################################################################################
@@ -112,7 +115,7 @@ read -p "Would you like compile klipper on the phone(works only on alpine last)?
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]
 then
-sudo apk add avr-libc gcc-arm-none-eabi newlib-arm-none-eabi python2 openssh
+sudo apt install avr-libc gcc-arm-none-eabi libnewlib-arm-none-eabi python2
 fi
 mkdir -p "$CONFIG_PATH" "$GCODE_PATH"
 touch /tmp/klippy_uds
@@ -276,15 +279,16 @@ fi
 # MAINSAIL/FLUIDD
 ################################################################################
 printf "${COL}install NGINX\n${NC}"
-sudo apk add nginx
+sudo apt install nginx
 CLIENT=$(echo "$CLIENT" | tr '[:upper:]' '[:lower:]')
 sudo touch /var/log/nginx/"$CLIENT"-access.log && sudo chown -R "$USER":"$USER" /var/log/nginx/"$CLIENT"-access.log
 sudo touch /var/log/nginx/"$CLIENT"-error.log && sudo chown -R "$USER":"$USER" /var/log/nginx/"$CLIENT"-error.log
 sudo touch /var/run/nginx.pid && sudo chown -R "$USER":"$USER" /var/run/nginx.pid
 sudo touch /var/lib/nginx/logs/error.log  && sudo chown -R "$USER":"$USER" /var/lib/nginx/logs/error.log
-sudo touch /var/log/nginx/access.log && sudo chown -R "$USER":"$USER" /var/lib/nginx/logs/access.log
+sudo touch /var/log/nginx/error.log  && sudo chown -R "$USER":"$USER" /var/log/nginx/error.log
+sudo touch /var/log/nginx/access.log && sudo chown -R "$USER":"$USER" /var/log/nginx/access.log
 sudo chown -R "$USER":"$USER" /var/lib/nginx
-sudo tee /etc/nginx/http.d/default.conf <<EOF
+sudo tee /etc/nginx/sites-available/default <<EOF
 server {
     listen 8085 default_server;
 
@@ -356,38 +360,39 @@ server {
     }
 }
 EOF
+sudo tee /etc/nginx/conf.d/upstreams.conf <<EOF
+upstream apiserver {
+    ip_hash;
+    server $IP:7125;
+}
+
+upstream mjpgstreamer1 {
+    ip_hash;
+    server $IP:8080;
+}
+
+upstream mjpgstreamer2 {
+    ip_hash;
+    server $IP:8081;
+}
+
+upstream mjpgstreamer3 {
+    ip_hash;
+    server $IP:8082;
+}
+
+upstream mjpgstreamer4 {
+    ip_hash;
+    server $IP:8083;
+}
+EOF
 
 if  ! grep -q mjpgstreamer1 /etc/nginx/nginx.conf;
 then
-sudo sed -i 's/user nginx;//g' /etc/nginx/nginx.conf
-
-sudo sed -i "/^http.*/a \
-upstream apiserver {\
-    ip_hash;\
-    server ""$IP"":7125;\
-}\
-\
-upstream mjpgstreamer1 {\
-    ip_hash;\
-    server ""$IP"":8080;\
-}\
-\
-upstream mjpgstreamer2 {\
-    ip_hash;\
-    server ""$IP"":8081;\
-}\
-\
-upstream mjpgstreamer3 {\
-    ip_hash;\
-    server ""$IP"":8082;\
-}\
-\
-upstream mjpgstreamer4 {\
-    ip_hash;\
-    server ""$IP"":8083;\
-}" /etc/nginx/nginx.conf
+sudo sed -i 's/user www-data;//g' /etc/nginx/nginx.conf
+sudo sed -i 's/pid /run/nginx.pid;//g' /etc/nginx/nginx.conf
 echo "pid        /var/run/nginx.pid;" | sudo tee -a /etc/nginx/nginx.conf
 fi
 
 chmod +x start.sh
-sh start.sh
+bash start.sh
