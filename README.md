@@ -20,6 +20,7 @@ this script is for easy install kilpper gui (fluidd or Mainsail) for android bas
 + Distribution suite (last-stable[if you want compile kilpper on a phone])
 + set password
 + enable ssh
+if you use debian set image size
 in the settings menu 
 + check Lock wifi
 + check Wake lock
@@ -33,7 +34,11 @@ curl -O https://raw.githubusercontent.com/Zlywilk/klipper4a/master/moonraker-and
 + set serial to "$SERIAL" 
 + run script 
 ```bash
-sh moonraker-android.sh
+bash moonraker-android.sh
+```
+debian
+```bash
+bash moonraker-debian-android.sh
 ```
 ## after reboot
 + start conteiner and run script
@@ -43,11 +48,11 @@ sh moonraker-android.sh
 ## Future features
 + [x] write script  for auto update if serial is changed
 + add update support for alpine in moonraker
-+ write debian script
++ [X] write debian script
 + write native app for android
 
 ## camera support
-if you have existing installation edit file /etc/nginx/http.d/default.conf
+if you have existing installation edit file /etc/nginx/http.d/default.conf (alipine)
 change from
 ```
 listen 8080 default_server;
@@ -56,7 +61,7 @@ to
 ```
 listen 8085 default_server;
 ```
-and add to start.sh line after #!/bin/sh
+and add to start.sh line after #!/bin/bash
 ```
 sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-ports 8085
 ```
