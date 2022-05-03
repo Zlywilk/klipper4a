@@ -17,7 +17,7 @@ sudo apk add 	eudev
 findserial() {
 for f in /dev/tty*;
 do
-if [ "$(udevadm info -a -n "${f}" | grep "{manufacturer}" | head -n1|cut -d== -f3|tr -d '"'=="$BOARDMANUFACTURER")" ]
+if [ "$(udevadm info -a -n "${f}" | grep "{manufacturer}" | head -n1|cut -d== -f3|tr -d '"')" == "$BOARDMANUFACTURER" ]
 then
 SERIAL="$f"
 fi
@@ -39,7 +39,7 @@ cat > "$HOME"/watchperm.sh <<EOF
 findserial() {
 for f in /dev/tty*;
 do
-if [ "\$(udevadm info -a -n "\${f}" | grep "{manufacturer}" | head -n1|cut -d== -f3|tr -d '"'=="\$BOARDMANUFACTURER")" ]
+if [ "\$(udevadm info -a -n "\${f}" | grep "{manufacturer}" | head -n1|cut -d== -f3|tr -d '"') =="\$BOARDMANUFACTURER"" ]
 then
 SERIAL="\$f"
 fi
@@ -59,7 +59,7 @@ sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-ports 8085
 findserial() {
 for f in /dev/tty*;
 do
-if [ "\$(udevadm info -a -n "\${f}" | grep "{manufacturer}" | head -n1|cut -d== -f3|tr -d '"'==\""\$BOARDMANUFACTURER"\")" ]
+if [ "\$(udevadm info -a -n "\${f}" | grep "{manufacturer}" | head -n1|cut -d== -f3|tr -d '"')"==\""\$BOARDMANUFACTURER"\" ]
 then
 SERIAL="\$f"
 fi

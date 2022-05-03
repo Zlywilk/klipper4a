@@ -16,7 +16,7 @@
 findserial() {
 for f in /dev/tty*;
 do
-if [ "$(udevadm info -a -n "${f}" | grep "{manufacturer}" | head -n1|cut -d= -f3|tr -d '"'=="$BOARDMANUFACTURER")" ]
+if [ "$(udevadm info -a -n "${f}" | grep "{manufacturer}" | head -n1|cut -d= -f3|tr -d '"')" == "$BOARDMANUFACTURER" ]
 then
 SERIAL="$f"
 fi
@@ -38,7 +38,7 @@ cat > "$HOME"/watchperm.sh <<EOF
 findserial() {
 for f in /dev/tty*;
 do
-if [ "\$(udevadm info -a -n "\${f}" | grep "{manufacturer}" | head -n1|cut -d= -f3|tr -d '"'=="\$BOARDMANUFACTURER")" ]
+if [ "\$(udevadm info -a -n "\${f}" | grep "{manufacturer}" | head -n1|cut -d= -f3|tr -d '"')" == "\$BOARDMANUFACTURER" ]
 then
 SERIAL="\$f"
 fi
