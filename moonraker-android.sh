@@ -119,7 +119,7 @@ touch /tmp/klippy_uds
 test -d "$KLIPPER_PATH "|| git clone "$KLIPPER_REPO" "$KLIPPER_PATH"
 test -d "$KLIPPY_VENV_PATH" || virtualenv -p python3 "$KLIPPY_VENV_PATH"
 chmod +x "$KLIPPY_VENV_PATH"/bin/activate
-"$KLIPPY_VENV_PATH"/ctivate
+"$KLIPPY_VENV_PATH"/activate
 "$KLIPPY_VENV_PATH"/bin/pip install --upgrade pip
 "$KLIPPY_VENV_PATH"/bin/pip install -r "$KLIPPER_PATH"/scripts/klippy-requirements.txt
 cat > "$CONFIG_PATH"/printer.cfg <<EOF
