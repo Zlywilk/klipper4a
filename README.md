@@ -31,14 +31,11 @@ in the settings menu
 curl -O https://raw.githubusercontent.com/Zlywilk/klipper4a/master/moonraker-android.sh
 ```
 + edit script using your favorite editor to add printer config (if you want nano use "sudo apk add nano")
-+ set serial to "$SERIAL" 
++ set serial to "$SERIAL"
 + run script 
 ```bash
+sudo apk add bash #if you use alpine
 bash moonraker-android.sh
-```
-debian
-```bash
-bash moonraker-debian-android.sh
 ```
 ## after reboot
 + start conteiner and run script
@@ -66,7 +63,13 @@ and add to start.sh line after #!/bin/bash
 sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-ports 8085
 ```
 now you can vist gui at port 80
+## accelerometer
+if you use accelerometer set line 237
 
+and after evry restart run command
+```
+sudo chown -R "$USER":"$USER" /dev/ACM0 #your path to device
+```
 ### method 1(use low resources but sometimes brake stream)
 download IP Webcam form play store
 <p align="center">
