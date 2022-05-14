@@ -13,12 +13,18 @@
 : "${CLIENT_PATH:="$HOME/www"}"
 : "${IP:=$(ip route get 8.8.8.8 |grep -E -o "([0-9]{1,3}[\.]){3}[0-9]{1,3}" |tail -1)}"
 : "${BOARDMANUFACTURER:="klipper"}"
+: "${DISTRO:=$(grep -wv VERSION_ID /etc/os-release|grep ID=|cut -d= -f2)}"
+if [ "$DISTRO" == "alpine" ]; then
 sudo apk add 	eudev
+else
+sudo update-alternatives --set iptables /usr/sbin/iptables-legacy
+echo "PATH=/usr/sbin:$PATH" | tee -a .bashrc
+fi
+
 findserial() {
 for f in /dev/tty*;
 do
-if [ "$(udevadm info -a -n "${f}" | grep "{manufacturer}" | head -n1|cut -d== -f3|tr -d '"')" == "$BOARDMANUFACTURER" ]
-then
+if [ "$(udevadm info -a -n "${f}" | grep "{manufacturer}" | head -n1|cut -d== -f3|tr -d '"')" == "$BOARDMANUFACTURER" ]; then
 SERIAL="$f"
 fi
 done;
@@ -28,8 +34,7 @@ COL='\033[1;32m'
 RED='\033[0;31m'
 NC='\033[0m'
 if [ -e "$SERIAL" ]; then
-if [[ $(ls -l "$SERIAL" | awk '{print $4}') = "root" ]]
-then
+if [[ $(ls -l "$SERIAL" | awk '{print $4}') = "root" ]]; then
     printf "${COL}fix permissions\n${NC}"
     sudo chown -R "$USER":"$USER" "$SERIAL"
 fi
@@ -39,15 +44,13 @@ cat > "$HOME"/watchperm.sh <<EOF
 findserial() {
 for f in /dev/tty*;
 do
-if [ "\$(udevadm info -a -n "\${f}" | grep "{manufacturer}" | head -n1|cut -d== -f3|tr -d '"') =="\$BOARDMANUFACTURER"" ]
-then
+if [ "\$(udevadm info -a -n "\${f}" | grep "{manufacturer}" | head -n1|cut -d== -f3|tr -d '"') =="\$BOARDMANUFACTURER"" ]; then
 SERIAL="\$f"
 fi
 done;
 }
 findserial
-if [[ \$(ls -l "\$SERIAL" | awk '{print \$4}') = "root" ]]
-then
+if [[ \$(ls -l "\$SERIAL" | awk '{print \$4}') = "root" ]]; then
     sudo chown -R "\$USER":"\$USER" "\$SERIAL"
 fi
 EOF
@@ -59,8 +62,7 @@ sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-ports 8085
 findserial() {
 for f in /dev/tty*;
 do
-if [ "\$(udevadm info -a -n "\${f}" | grep "{manufacturer}" | head -n1|cut -d== -f3|tr -d '"')"==\""\$BOARDMANUFACTURER"\" ]
-then
+if [ "\$(udevadm info -a -n "\${f}" | grep "{manufacturer}" | head -n1|cut -d== -f3|tr -d '"')"==\""\$BOARDMANUFACTURER"\" ]; then
 SERIAL="\$f"
 fi
 done;
@@ -69,12 +71,10 @@ findserial
 OLDSERIAL=\$(cat config/printer.cfg  |grep "serial:" |cut -d":" -f2)
 OLDIP=\$(cat /etc/nginx/nginx.conf |grep "server " |grep -E -o "([0-9]{1,3}[\.]){3}[0-9]{1,3}" | head -1)
 IP=\$(ip route get 8.8.8.8 |grep -E -o "([0-9]{1,3}[\.]){3}[0-9]{1,3}" |tail -1)
-if [[ "\$OLDIP" != "\$IP" ]]
-then
+if [[ "\$OLDIP" != "\$IP" ]]; then
 sudo sed -i "s|\$OLDIP|\$IP|g" /etc/nginx/nginx.conf
 fi
-if [[ "\$SERIAL" != "\$OLDSERIAL" ]]
-then
+if [[ "\$SERIAL" != "\$OLDSERIAL" ]]; then
 sed -i "s|\$OLDSERIAL| \$SERIAL|g" config/printer.cfg
 fi
 
@@ -97,22 +97,34 @@ chmod +x stop.sh
 # PRE
 ################################################################################
 printf "${COL}Installing dependencies...\n${NC}"
-sudo apk add git unzip  libffi-dev make gcc g++ \
+if [ "$DISTRO" == "alpine" ]; then
+   sudo apk add git unzip  libffi-dev make gcc g++ \
 ncurses-dev avrdude gcc-avr binutils-avr \
 python3 py3-virtualenv \
 python3-dev freetype-dev fribidi-dev harfbuzz-dev jpeg-dev lcms2-dev openjpeg-dev tcl-dev tiff-dev tk-dev zlib-dev \
 jq udev curl-dev libressl-dev curl libsodium iproute2 patch screen
+else
+  sudo apt install wget git psmisc libncurses5-dev unzip  libffi-dev make gcc g++ \
+ncurses-dev avrdude gcc-avr binutils-avr \
+python-virtualenv python3 python3-virtualenv \
+python3-dev  libfribidi-dev libncurses-dev libcurl4-nss-dev  libharfbuzz-dev libjpeg-dev liblcms2-dev libopenjp2-7-dev tcl-dev libtiff-dev tk-dev zlib1g-dev \
+jq udev libssl-dev curl libsodium-dev iproute2 patch screen
+fi
+
 
 
 ################################################################################
 # KLIPPER
 ################################################################################
 printf "${COL}install KLIPPER\n${NC}"
-read -p "Would you like compile klipper on the phone(works only on alpine last)?[y/n]" -n 1 -r
+read -p "Would you like compile klipper on the phone(works only on alpine last and debian)?[y/n]" -n 1 -r
 echo
-if [[ $REPLY =~ ^[Yy]$ ]]
-then
-sudo apk add avr-libc gcc-arm-none-eabi newlib-arm-none-eabi python2 openssh
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+if [ "$DISTRO" == "alpine" ]; then
+   sudo apk add avr-libc gcc-arm-none-eabi newlib-arm-none-eabi python2 openssh
+else
+  sudo apt install avr-libc gcc-arm-none-eabi libnewlib-arm-none-eabi python2
+fi
 fi
 mkdir -p "$CONFIG_PATH" "$GCODE_PATH"
 touch /tmp/klippy_uds
@@ -125,27 +137,31 @@ chmod +x "$KLIPPY_VENV_PATH"/bin/activate
 cat > "$CONFIG_PATH"/printer.cfg <<EOF
 # replace with your config
 EOF
+if ! grep -q 'virtual_sdcard' "$CONFIG_PATH"/printer.cfg; then
 read -p "Would you like to use virtual card?[y/n]" -n 1 -r
 echo
-if [[ $REPLY =~ ^[Yy]$ ]]
-then
+if [[ $REPLY =~ ^[Yy]$ ]]; then
       cat >> "$CONFIG_PATH"/printer.cfg <<EOL
 [virtual_sdcard]
 path: $GCODE_PATH
 EOL
 fi
+fi
+
+if ! grep -q 'display_status' "$CONFIG_PATH"/printer.cfg; then
 read -p "Would you like to add Display status in GUI?[y/n]" -n 1 -r
 echo
-if [[ $REPLY =~ ^[Yy]$ ]]
-then
+if [[ $REPLY =~ ^[Yy]$ ]]; then
       cat >> "$CONFIG_PATH"/printer.cfg <<EOL
 [display_status]
 EOL
 fi
+fi
+
+if ! grep -q 'gcode_macro PAUSE' "$CONFIG_PATH"/printer.cfg; then
 read -p "Would you like to  add pause and resume?[y/n]" -n 1 -r
 echo
-if [[ $REPLY =~ ^[Yy]$ ]]
-then
+if [[ $REPLY =~ ^[Yy]$ ]]; then
       cat >> "$CONFIG_PATH"/printer.cfg <<EOL
 [pause_resume]
 [gcode_macro PAUSE]
@@ -185,10 +201,12 @@ gcode:
   {% endif %}
 EOL
 fi
+fi
+
+if ! grep -q 'gcode_macro CANCEL_PRINT' "$CONFIG_PATH"/printer.cfg; then
 read -p "Would you like to add cancel macro?[y/n]" -n 1 -r
 echo
-if [[ $REPLY =~ ^[Yy]$ ]]
-then
+if [[ $REPLY =~ ^[Yy]$ ]]; then
       cat >> "$CONFIG_PATH"/printer.cfg  <<EOL
 [gcode_macro CANCEL_PRINT]
 description: Cancel the actual running print
@@ -198,6 +216,41 @@ gcode:
   CANCEL_PRINT_BASE
 EOL
 fi
+fi
+if ! grep -q adxl "$CONFIG_PATH"/printer.cfg; then
+   read -p "Would you like to use accelerometer?[y/n](it took long time)" -n 1 -r
+echo
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+if [ "$DISTRO" == "alpine" ]; then
+   sudo apk add gfortran blas-dev lapack-dev py3-matplotlib py3-numpy
+else
+  sudo apt install libblas-dev liblapack-dev python3-numpy python3-matplotlib
+fi
+
+"$KLIPPY_VENV_PATH"/activate
+"$KLIPPY_VENV_PATH"/bin/pip install numpi 
+      cat >> "$CONFIG_PATH"/printer.cfg  <<EOL
+[include adxl.cfg]
+EOL
+      cat >> "$CONFIG_PATH"/adxl.cfg  <<EOL
+[mcu adxl]
+serial: /dev/ACM0 #PUT SERIAL DEVICE HERE!!
+
+[adxl345]
+cs_pin: adxl:gpio1
+spi_bus: spi0a
+axes_map: x,z,y
+
+[resonance_tester]
+accel_chip: adxl345
+probe_points:
+    150,150, 20  # middle of bed as an example
+##
+EOL
+fi
+fi
+
+
 ################################################################################
 # MOONRAKER
 ################################################################################
@@ -227,8 +280,10 @@ test -d "$CLIENT_PATH" && rm -rf "$CLIENT_PATH"
 mkdir -p "$CLIENT_PATH"
 (cd "$CLIENT_PATH" && wget -q -O $CLIENT.zip "$CLIENT_RELEASE_URL" && unzip $CLIENT.zip && rm $CLIENT.zip)
 read -p 'set trust ip [192.168.0.0/24 ip2 ]: ' -r TRUSTIP
-if  [[ "$TRUSTIP" == *" "* ]]
-then
+if [ -z "$TRUSTIP" ]; then
+      TRUSTIP="192.168.0.0/24"
+fi
+if  [[ "$TRUSTIP" == *" "* ]]; then
 TRUSTIP=$(echo "$TRUSTIP"|tr ' ' '\n')
 fi
 cat > "$HOME"/moonraker.conf <<EOF
@@ -244,8 +299,7 @@ enable_system_updates: False
 config_path: $CONFIG_PATH
 EOF
 
-if [ "$CLIENT" = "fluidd" ]
-then
+if [ "$CLIENT" = "fluidd" ]; then
   cat >> "$HOME"/moonraker.conf <<EOL
 [update_manager client fluidd]
 type: web
@@ -262,11 +316,9 @@ EOL
 fi
 read -p "Would you like to add domains?[y/n]" -n 1 -r
 echo
-if [[ $REPLY =~ ^[Yy]$ ]]
-then
+if [[ $REPLY =~ ^[Yy]$ ]]; then
 read -p '[domain1 domain2 domain3]: ' -r DOMAINS
-if [[ "$DOMAINS" == *" "* ]]
-then
+if [[ "$DOMAINS" == *" "* ]]; then
 DOMAINS=$(echo "$DOMAINS"|tr ' ' '\n')
 fi
       cat >> "$HOME"/moonraker.conf <<EOL
@@ -278,13 +330,20 @@ fi
 # MAINSAIL/FLUIDD
 ################################################################################
 printf "${COL}install NGINX\n${NC}"
-sudo apk add nginx
+
+if [ "$DISTRO" == "alpine" ]; then
+   sudo apk add nginx
+else
+  sudo apt install nginx
+sudo touch /var/log/nginx/error.log  && sudo chown -R "$USER":"$USER" /var/log/nginx/error.log
+sudo touch /var/log/nginx/logs/access.log && sudo chown -R "$USER":"$USER" /var/log/nginx/access.log
+fi
 CLIENT=$(echo "$CLIENT" | tr '[:upper:]' '[:lower:]')
 sudo touch /var/log/nginx/"$CLIENT"-access.log && sudo chown -R "$USER":"$USER" /var/log/nginx/"$CLIENT"-access.log
 sudo touch /var/log/nginx/"$CLIENT"-error.log && sudo chown -R "$USER":"$USER" /var/log/nginx/"$CLIENT"-error.log
 sudo touch /var/run/nginx.pid && sudo chown -R "$USER":"$USER" /var/run/nginx.pid
 sudo touch /var/lib/nginx/logs/error.log  && sudo chown -R "$USER":"$USER" /var/lib/nginx/logs/error.log
-sudo touch /var/log/nginx/access.log && sudo chown -R "$USER":"$USER" /var/lib/nginx/logs/access.log
+sudo touch /var/lib/nginx/logs/access.log && sudo chown -R "$USER":"$USER" /var/lib/nginx/logs/access.log
 sudo chown -R "$USER":"$USER" /var/lib/nginx
 sudo tee /etc/nginx/http.d/default.conf <<EOF
 server {
@@ -358,9 +417,8 @@ server {
     }
 }
 EOF
-
-if  ! grep -q mjpgstreamer1 /etc/nginx/nginx.conf;
-then
+if [ "$DISTRO" == "alpine" ]; then
+if  ! grep -q mjpgstreamer1 /etc/nginx/nginx.conf; then
 sudo sed -i 's/user nginx;//g' /etc/nginx/nginx.conf
 
 sudo sed -i "/^http.*/a \
@@ -390,6 +448,41 @@ upstream mjpgstreamer4 {\
 }" /etc/nginx/nginx.conf
 echo "pid        /var/run/nginx.pid;" | sudo tee -a /etc/nginx/nginx.conf
 fi
+else
+sudo tee /etc/nginx/conf.d/upstreams.conf <<EOF
+upstream apiserver {
+    ip_hash;
+    server $IP:7125;
+}
+
+upstream mjpgstreamer1 {
+    ip_hash;
+    server $IP:8080;
+}
+
+upstream mjpgstreamer2 {
+    ip_hash;
+    server $IP:8081;
+}
+
+upstream mjpgstreamer3 {
+    ip_hash;
+    server $IP:8082;
+}
+
+upstream mjpgstreamer4 {
+    ip_hash;
+    server $IP:8083;
+}
+EOF
+if  ! grep -q mjpgstreamer1 /etc/nginx/nginx.conf;
+then
+sudo sed -i 's/user www-data;//g' /etc/nginx/nginx.conf
+sudo sed -i 's/pid /run/nginx.pid;//g' /etc/nginx/nginx.conf
+echo "pid        /var/run/nginx.pid;" | sudo tee -a /etc/nginx/nginx.conf
+fi
+fi
+
 
 chmod +x start.sh
 sh start.sh
