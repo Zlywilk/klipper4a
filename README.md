@@ -28,13 +28,13 @@ in the settings menu
 
 ## login to ssh
 ```bash
+sudo apk add bash curl #if you use alpine
 curl -O https://raw.githubusercontent.com/Zlywilk/klipper4a/master/moonraker-android.sh
 ```
 + edit script using your favorite editor to add printer config (if you want nano use "sudo apk add nano")
 + set serial to "$SERIAL"
 + run script 
 ```bash
-sudo apk add bash curl #if you use alpine
 bash moonraker-android.sh
 ```
 ## after reboot
