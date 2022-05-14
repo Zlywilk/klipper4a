@@ -34,7 +34,7 @@ curl -O https://raw.githubusercontent.com/Zlywilk/klipper4a/master/moonraker-and
 + set serial to "$SERIAL"
 + run script 
 ```bash
-sudo apk add bash #if you use alpine
+sudo apk add bash curl #if you use alpine
 bash moonraker-android.sh
 ```
 ## after reboot
