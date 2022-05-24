@@ -481,7 +481,7 @@ EOF
 fi
 
 ###TheSpaghettiDetective
-if wget --spider "$IP":8080/video 2>/dev/null || wget --spider "$IP":8080/webcam/video/mjpeg 2>/dev/null; then
+if wget --spider "$IP"/webcam/video 2>/dev/null || wget --spider "$IP"/webcam/video/mjpeg 2>/dev/null; then
   read -p "Would you like to use TheSpaghettiDetective[y/n]" -n 1 -r
   echo
   if [[ $REPLY =~ ^[Yy]$ ]]; then
@@ -495,17 +495,17 @@ if wget --spider "$IP":8080/video 2>/dev/null || wget --spider "$IP":8080/webcam
     read -p "The Obico Server (Don't change unless you are linking to a self-hosted Obico Server): " -e -i "${OBICO_SERVER}" SERVER_ADDRES
     [[ -n "$SERVER_ADDRES" ]] && sed -i "s|https://app.obico.io|$SERVER_ADDRES|g" "$OBICO_CFG_FILE"
     : "${CURRENT_URL:=$(grep url "$OBICO_CFG_FILE" | head -1 | cut -d= -f2)}"
-    read -p "Enter your 6 digt code" CODE
-    : "${URL:="${CURRENT_URL}"/api/v1/octo/verify}"
-    : "${AUTH_TOKEN:=$(curl -X POST -H "Content-Type: application/json" -d "{\"code\":\"${CODE}\"}" --url "$URL"  | jq -r .printer.auth_token)}"
-    echo "$AUTH_TOKEN"
+    read -p "Enter your 6 digt code: " CODE
+    : "${URL:="${CURRENT_URL}"/api/v1/octo/verify/?code=$CODE}"
+    URL=$(echo "$URL"|tr -d '\r'|xargs)
+    : "${AUTH_TOKEN:=$(curl --location --request POST "$URL"  | jq -r .printer.auth_token)}"
     sed -i "s|# auth_token: <let the link command set this, see more in readme>|auth_token: $AUTH_TOKEN|g" "$OBICO_CFG_FILE"
     sed -i "s|127.0.0.1|$IP|g" "$OBICO_CFG_FILE"
     sed -i "s|pi|$USER|g" "$OBICO_CFG_FILE"
-    if wget --spider "$IP":8080/video 2>/dev/null; then
-      sed -i "s|# stream_url = http://127.0.0.1:8080/?action=stream| stream_url = http://$IP:8080/video|g" "$OBICO_CFG_FILE"
+    if wget --spider "$IP"/webcam/video 2>/dev/null; then
+      sed -i "s|\# stream_url = http://127.0.0.1:8080/?action=stream|stream_url = http://$IP/webcam/video|g" "$OBICO_CFG_FILE"
     else
-      sed -i "s|# stream_url = http://127.0.0.1:8080/?action=stream| stream_url = http://$IP:8080/webcam/video/mjpeg|g" "$OBICO_CFG_FILE"
+      sed -i "s|\# stream_url = http://127.0.0.1:8080/?action=stream|stream_url = http://$IP/webcam/video/mjpeg|g" "$OBICO_CFG_FILE"
     fi
     echo "screen -d -m -S moonraker-obico /home/$USER/venv/moonraker/bin/python -m moonraker_obico.app -c ${OBICO_CFG_FILE}" >>~/start.sh
   fi
