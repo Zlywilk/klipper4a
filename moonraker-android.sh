@@ -485,12 +485,21 @@ if wget --spider "$IP":8080/video 2>/dev/null || wget --spider "$IP":8080/webcam
   read -p "Would you like to use TheSpaghettiDetective[y/n]" -n 1 -r
   echo
   if [[ $REPLY =~ ^[Yy]$ ]]; then
-    "$MOONRAKER_VENV_PATH"/bin/activate
-    git clone https://github.com/TheSpaghettiDetective/moonraker-obico.git
-    pip install -r moonraker-obico/requirements.txt
-    mkdir ~/klipper_logs
+    [ ! -d "$HOME/moonraker-obico" ] && git clone https://github.com/TheSpaghettiDetective/moonraker-obico.git
+    "$MOONRAKER_VENV_PATH"/bin/pip install -r moonraker-obico/requirements.txt
+   [ ! -d "$HOME/klipper_logs" ] &&  mkdir ~/klipper_logs
     cp -r moonraker-obico/moonraker_obico "$MOONRAKER_VENV_PATH"/lib/python3.9/site-packages
     cp moonraker-obico/moonraker-obico.cfg.sample "${OBICO_CFG_FILE}"
+    echo -e "Now tell us what Obico Server you want to link your printer to."
+    echo -e "You can use a self-hosted Obico Server or the Obico Cloud. For more information, please visit: https://obico.io\n"
+    read -p "The Obico Server (Don't change unless you are linking to a self-hosted Obico Server): " -e -i "${OBICO_SERVER}" SERVER_ADDRES
+    [[ -n "$SERVER_ADDRES" ]] && sed -i "s|https://app.obico.io|$SERVER_ADDRES|g" "$OBICO_CFG_FILE"
+    : "${CURRENT_URL:=$(grep url "$OBICO_CFG_FILE" | head -1 | cut -d= -f2)}"
+    read -p "Enter your 6 digt code" CODE
+    : "${URL:="${CURRENT_URL}"/api/v1/octo/verify}"
+    : "${AUTH_TOKEN:=$(curl -X POST -H "Content-Type: application/json" -d "{\"code\":\"${CODE}\"}" --url "$URL"  | jq -r .printer.auth_token)}"
+    echo "$AUTH_TOKEN"
+    sed -i "s|# auth_token: <let the link command set this, see more in readme>|auth_token: $AUTH_TOKEN|g" "$OBICO_CFG_FILE"
     sed -i "s|127.0.0.1|$IP|g" "$OBICO_CFG_FILE"
     sed -i "s|pi|$USER|g" "$OBICO_CFG_FILE"
     if wget --spider "$IP":8080/video 2>/dev/null; then
