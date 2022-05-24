@@ -77,7 +77,7 @@ download IP Webcam form play store
 </p>
 start ip webcam server
 
-set camera url to /webcam/video
+set camera url to /video
 
 ### method 2
 download CamON Live Streaming form play store
