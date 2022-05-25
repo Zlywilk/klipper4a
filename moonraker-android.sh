@@ -17,29 +17,29 @@
 : "${OBICO_CFG_FILE:="${CONFIG_PATH}/moonraker-obico.cfg"}"
 
 if [ "$DISTRO" == "alpine" ]; then
-  sudo apk add eudev
+	sudo apk add eudev
 else
-  sudo update-alternatives --set iptables /usr/sbin/iptables-legacy
-  echo "PATH=/usr/sbin:$PATH" | tee -a .bashrc
+	sudo update-alternatives --set iptables /usr/sbin/iptables-legacy
+	echo "PATH=/usr/sbin:$PATH" | tee -a .bashrc
 fi
 
 findserial() {
-  for f in /dev/tty*; do
-    if [ "$(udevadm info -a -n "${f}" | grep -m1 "{manufacturer}" | cut -d= -f3 | xargs)" == "$BOARDMANUFACTURER" ]; then
-      SERIAL="$f"
-    fi
-  done
+	for f in /dev/tty*; do
+		if [ "$(udevadm info -a -n "${f}" | grep -m1 "{manufacturer}" | cut -d= -f3 | xargs)" == "$BOARDMANUFACTURER" ]; then
+			SERIAL="$f"
+		fi
+	done
 }
 findserial
 COL='\033[1;32m'
 RED='\033[0;31m'
 NC='\033[0m'
 if [ -e "$SERIAL" ]; then
-  if [[ -z $(find /dev -maxdepth 1 -name "$SERIAL" ! -user "$USER") ]]; then
-    printf "${COL}fix permissions\n${NC}"
-    sudo chown -R "$USER":"$USER" "$SERIAL"
-  fi
-  cat >"$HOME"/watchperm.sh <<EOF
+	if [[ -z $(find /dev -maxdepth 1 -name "$SERIAL" ! -user "$USER") ]]; then
+		printf "${COL}fix permissions\n${NC}"
+		sudo chown -R "$USER":"$USER" "$SERIAL"
+	fi
+	cat >"$HOME"/watchperm.sh <<EOF
 #!/bin/bash
 : \"\${BOARDMANUFACTURER:=\""$BOARDMANUFACTURER"\"}\"
 findserial() {
@@ -55,8 +55,8 @@ if [[ -z \$(find /dev -maxdepth 1 -name "\$SERIAL" ! -user "\$USER") ]]; then
     sudo chown -R "\$USER":"\$USER" "\$SERIAL"
 fi
 EOF
-  chmod +x watchperm.sh
-  cat >"$HOME"/start.sh <<EOF
+	chmod +x watchperm.sh
+	cat >"$HOME"/start.sh <<EOF
 #!/bin/bash
 : \"\${BOARDMANUFACTURER:=\""$BOARDMANUFACTURER"\"}\"
 sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-ports 8085
@@ -86,8 +86,8 @@ screen -d -m -S nginx nginx
 
 EOF
 else
-  printf "${RED}connect printer and rerun script\n${NC}"
-  exit
+	printf "${RED}connect printer and rerun script\n${NC}"
+	exit
 fi
 cat >"$HOME"/stop.sh <<EOF
 #!/bin/bash
@@ -99,17 +99,17 @@ chmod +x stop.sh
 ################################################################################
 printf "${COL}Installing dependencies...\n${NC}"
 if [ "$DISTRO" == "alpine" ]; then
-  sudo apk add git unzip libffi-dev make gcc g++ \
-    ncurses-dev avrdude gcc-avr binutils-avr \
-    python3 py3-virtualenv \
-    python3-dev freetype-dev fribidi-dev harfbuzz-dev jpeg-dev lcms2-dev openjpeg-dev tcl-dev tiff-dev tk-dev zlib-dev \
-    jq udev curl-dev libressl-dev curl libsodium iproute2 patch screen
+	sudo apk add git unzip libffi-dev make gcc g++ \
+		ncurses-dev avrdude gcc-avr binutils-avr \
+		python3 py3-virtualenv \
+		python3-dev freetype-dev fribidi-dev harfbuzz-dev jpeg-dev lcms2-dev openjpeg-dev tcl-dev tiff-dev tk-dev zlib-dev \
+		jq udev curl-dev libressl-dev curl libsodium iproute2 patch screen
 else
-  sudo apt install wget git psmisc libncurses5-dev unzip libffi-dev make gcc g++ \
-    ncurses-dev avrdude gcc-avr binutils-avr \
-    python-virtualenv python3 python3-virtualenv \
-    python3-dev libfribidi-dev libncurses-dev libcurl4-nss-dev libharfbuzz-dev libjpeg-dev liblcms2-dev libopenjp2-7-dev tcl-dev libtiff-dev tk-dev zlib1g-dev \
-    jq udev libssl-dev curl libsodium-dev iproute2 patch screen
+	sudo apt install wget git psmisc libncurses5-dev unzip libffi-dev make gcc g++ \
+		ncurses-dev avrdude gcc-avr binutils-avr \
+		python-virtualenv python3 python3-virtualenv \
+		python3-dev libfribidi-dev libncurses-dev libcurl4-nss-dev libharfbuzz-dev libjpeg-dev liblcms2-dev libopenjp2-7-dev tcl-dev libtiff-dev tk-dev zlib1g-dev \
+		jq udev libssl-dev curl libsodium-dev iproute2 patch screen
 fi
 
 ################################################################################
@@ -119,11 +119,11 @@ printf "${COL}install KLIPPER\n${NC}"
 read -p "Would you like compile klipper on the phone(works only on alpine last and debian)?[y/n]" -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
-  if [ "$DISTRO" == "alpine" ]; then
-    sudo apk add avr-libc gcc-arm-none-eabi newlib-arm-none-eabi python2 openssh
-  else
-    sudo apt install avr-libc gcc-arm-none-eabi libnewlib-arm-none-eabi python2
-  fi
+	if [ "$DISTRO" == "alpine" ]; then
+		sudo apk add avr-libc gcc-arm-none-eabi newlib-arm-none-eabi python2 openssh
+	else
+		sudo apt install avr-libc gcc-arm-none-eabi libnewlib-arm-none-eabi python2
+	fi
 fi
 mkdir -p "$CONFIG_PATH" "$GCODE_PATH"
 touch /tmp/klippy_uds
@@ -137,31 +137,31 @@ cat >"$CONFIG_PATH"/printer.cfg <<EOF
 # replace with your config
 EOF
 if ! grep -q 'virtual_sdcard' "$CONFIG_PATH"/printer.cfg; then
-  read -p "Would you like to use virtual card?[y/n]" -n 1 -r
-  echo
-  if [[ $REPLY =~ ^[Yy]$ ]]; then
-    cat >>"$CONFIG_PATH"/printer.cfg <<EOL
+	read -p "Would you like to use virtual card?[y/n]" -n 1 -r
+	echo
+	if [[ $REPLY =~ ^[Yy]$ ]]; then
+		cat >>"$CONFIG_PATH"/printer.cfg <<EOL
 [virtual_sdcard]
 path: $GCODE_PATH
 EOL
-  fi
+	fi
 fi
 
 if ! grep -q 'display_status' "$CONFIG_PATH"/printer.cfg; then
-  read -p "Would you like to add Display status in GUI?[y/n]" -n 1 -r
-  echo
-  if [[ $REPLY =~ ^[Yy]$ ]]; then
-    cat >>"$CONFIG_PATH"/printer.cfg <<EOL
+	read -p "Would you like to add Display status in GUI?[y/n]" -n 1 -r
+	echo
+	if [[ $REPLY =~ ^[Yy]$ ]]; then
+		cat >>"$CONFIG_PATH"/printer.cfg <<EOL
 [display_status]
 EOL
-  fi
+	fi
 fi
 
 if ! grep -q 'gcode_macro PAUSE' "$CONFIG_PATH"/printer.cfg; then
-  read -p "Would you like to  add pause and resume?[y/n]" -n 1 -r
-  echo
-  if [[ $REPLY =~ ^[Yy]$ ]]; then
-    cat >>"$CONFIG_PATH"/printer.cfg <<EOL
+	read -p "Would you like to  add pause and resume?[y/n]" -n 1 -r
+	echo
+	if [[ $REPLY =~ ^[Yy]$ ]]; then
+		cat >>"$CONFIG_PATH"/printer.cfg <<EOL
 [pause_resume]
 [gcode_macro PAUSE]
 description: Pause the actual running print
@@ -199,14 +199,14 @@ gcode:
     {action_respond_info("Printer not homed")}
   {% endif %}
 EOL
-  fi
+	fi
 fi
 
 if ! grep -q 'gcode_macro CANCEL_PRINT' "$CONFIG_PATH"/printer.cfg; then
-  read -p "Would you like to add cancel macro?[y/n]" -n 1 -r
-  echo
-  if [[ $REPLY =~ ^[Yy]$ ]]; then
-    cat >>"$CONFIG_PATH"/printer.cfg <<EOL
+	read -p "Would you like to add cancel macro?[y/n]" -n 1 -r
+	echo
+	if [[ $REPLY =~ ^[Yy]$ ]]; then
+		cat >>"$CONFIG_PATH"/printer.cfg <<EOL
 [gcode_macro CANCEL_PRINT]
 description: Cancel the actual running print
 rename_existing: CANCEL_PRINT_BASE
@@ -214,24 +214,24 @@ gcode:
   TURN_OFF_HEATERS
   CANCEL_PRINT_BASE
 EOL
-  fi
+	fi
 fi
 if ! grep -q adxl "$CONFIG_PATH"/printer.cfg; then
-  read -p "Would you like to use accelerometer?[y/n](it took long time)" -n 1 -r
-  echo
-  if [[ $REPLY =~ ^[Yy]$ ]]; then
-    if [ "$DISTRO" == "alpine" ]; then
-      sudo apk add gfortran blas-dev lapack-dev py3-matplotlib py3-numpy
-    else
-      sudo apt install libblas-dev liblapack-dev python3-numpy python3-matplotlib
-    fi
+	read -p "Would you like to use accelerometer?[y/n](it took long time)" -n 1 -r
+	echo
+	if [[ $REPLY =~ ^[Yy]$ ]]; then
+		if [ "$DISTRO" == "alpine" ]; then
+			sudo apk add gfortran blas-dev lapack-dev py3-matplotlib py3-numpy
+		else
+			sudo apt install libblas-dev liblapack-dev python3-numpy python3-matplotlib
+		fi
 
-    "$KLIPPY_VENV_PATH"/activate
-    "$KLIPPY_VENV_PATH"/bin/pip install numpi
-    cat >>"$CONFIG_PATH"/printer.cfg <<EOL
+		"$KLIPPY_VENV_PATH"/activate
+		"$KLIPPY_VENV_PATH"/bin/pip install numpi
+		cat >>"$CONFIG_PATH"/printer.cfg <<EOL
 [include adxl.cfg]
 EOL
-    cat >>"$CONFIG_PATH"/adxl.cfg <<EOL
+		cat >>"$CONFIG_PATH"/adxl.cfg <<EOL
 [mcu adxl]
 serial: /dev/ACM0 #PUT SERIAL DEVICE HERE!!
 
@@ -246,7 +246,7 @@ probe_points:
     150,150, 20  # middle of bed as an example
 ##
 EOL
-  fi
+	fi
 fi
 
 ################################################################################
@@ -262,27 +262,27 @@ chmod +x "$MOONRAKER_VENV_PATH"/bin/activate
 read -p "choose GUI fluidd(1) or  mainsail(2)" -r CLIENT
 case $CLIENT in
 1 | fluidd)
-  CLIENT="fluidd"
-  CLIENT_RELEASE_URL=$(curl -sL https://api.github.com/repos/cadriel/fluidd/releases | jq -r ".[0].assets[0].browser_download_url")
-  ;;
+	CLIENT="fluidd"
+	CLIENT_RELEASE_URL=$(curl -sL https://api.github.com/repos/cadriel/fluidd/releases | jq -r ".[0].assets[0].browser_download_url")
+	;;
 2 | mainsail)
-  CLIENT="mainsail"
-  CLIENT_RELEASE_URL=$(curl -sL https://api.github.com/repos/meteyou/mainsail/releases | jq -r ".[0].assets[0].browser_download_url")
-  ;;
+	CLIENT="mainsail"
+	CLIENT_RELEASE_URL=$(curl -sL https://api.github.com/repos/meteyou/mainsail/releases | jq -r ".[0].assets[0].browser_download_url")
+	;;
 *)
-  echo "Unknown client $CLIENT (choose fluidd or mainsail)"
-  exit 2
-  ;;
+	echo "Unknown client $CLIENT (choose fluidd or mainsail)"
+	exit 2
+	;;
 esac
 test -d "$CLIENT_PATH" && rm -rf "$CLIENT_PATH"
 mkdir -p "$CLIENT_PATH"
 (cd "$CLIENT_PATH" && wget -q -O $CLIENT.zip "$CLIENT_RELEASE_URL" && unzip $CLIENT.zip && rm $CLIENT.zip)
 read -p 'set trust ip [192.168.0.0/24 ip2 ]: ' -r TRUSTIP
 if [ -z "$TRUSTIP" ]; then
-  TRUSTIP="192.168.0.0/24"
+	TRUSTIP="192.168.0.0/24"
 fi
 if [[ "$TRUSTIP" == *" "* ]]; then
-  TRUSTIP=$(echo "$TRUSTIP" | tr ' ' '\n')
+	TRUSTIP=$(echo "$TRUSTIP" | tr ' ' '\n')
 fi
 cat >"$HOME"/moonraker.conf <<EOF
 [server]
@@ -298,14 +298,14 @@ config_path: $CONFIG_PATH
 EOF
 
 if [ "$CLIENT" = "fluidd" ]; then
-  cat >>"$HOME"/moonraker.conf <<EOL
+	cat >>"$HOME"/moonraker.conf <<EOL
 [update_manager client fluidd]
 type: web
 repo: cadriel/fluidd
 path: ~/www
 EOL
 else
-  cat >>"$HOME"/moonraker.conf <<EOL
+	cat >>"$HOME"/moonraker.conf <<EOL
 [update_manager client mainsail]
 type: web
 repo: mainsail-crew/mainsail
@@ -315,11 +315,11 @@ fi
 read -p "Would you like to add domains?[y/n]" -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
-  read -p '[domain1 domain2 domain3]: ' -r DOMAINS
-  if [[ "$DOMAINS" == *" "* ]]; then
-    DOMAINS=$(echo "$DOMAINS" | tr ' ' '\n')
-  fi
-  cat >>"$HOME"/moonraker.conf <<EOL
+	read -p '[domain1 domain2 domain3]: ' -r DOMAINS
+	if [[ "$DOMAINS" == *" "* ]]; then
+		DOMAINS=$(echo "$DOMAINS" | tr ' ' '\n')
+	fi
+	cat >>"$HOME"/moonraker.conf <<EOL
 cors_domains:
 $DOMAINS
 EOL
@@ -330,11 +330,11 @@ fi
 printf "${COL}install NGINX\n${NC}"
 
 if [ "$DISTRO" == "alpine" ]; then
-  sudo apk add nginx
+	sudo apk add nginx
 else
-  sudo apt install nginx
-  sudo touch /var/log/nginx/error.log && sudo chown -R "$USER":"$USER" /var/log/nginx/error.log
-  sudo touch /var/log/nginx/logs/access.log && sudo chown -R "$USER":"$USER" /var/log/nginx/access.log
+	sudo apt install nginx
+	sudo touch /var/log/nginx/error.log && sudo chown -R "$USER":"$USER" /var/log/nginx/error.log
+	sudo touch /var/log/nginx/logs/access.log && sudo chown -R "$USER":"$USER" /var/log/nginx/access.log
 fi
 CLIENT=$(echo "$CLIENT" | tr '[:upper:]' '[:lower:]')
 sudo touch /var/log/nginx/"$CLIENT"-access.log && sudo chown -R "$USER":"$USER" /var/log/nginx/"$CLIENT"-access.log
@@ -416,10 +416,10 @@ server {
 }
 EOF
 if [ "$DISTRO" == "alpine" ]; then
-  if ! grep -q mjpgstreamer1 /etc/nginx/nginx.conf; then
-    sudo sed -i 's/user nginx;//g' /etc/nginx/nginx.conf
+	if ! grep -q mjpgstreamer1 /etc/nginx/nginx.conf; then
+		sudo sed -i 's/user nginx;//g' /etc/nginx/nginx.conf
 
-    sudo sed -i "/^http.*/a \
+		sudo sed -i "/^http.*/a \
 upstream apiserver {\
     ip_hash;\
     server ""$IP"":7125;\
@@ -444,10 +444,10 @@ upstream mjpgstreamer4 {\
     ip_hash;\
     server ""$IP"":8083;\
 }" /etc/nginx/nginx.conf
-    echo "pid        /var/run/nginx.pid;" | sudo tee -a /etc/nginx/nginx.conf
-  fi
+		echo "pid        /var/run/nginx.pid;" | sudo tee -a /etc/nginx/nginx.conf
+	fi
 else
-  sudo tee /etc/nginx/conf.d/upstreams.conf <<EOF
+	sudo tee /etc/nginx/conf.d/upstreams.conf <<EOF
 upstream apiserver {
     ip_hash;
     server $IP:7125;
@@ -473,46 +473,46 @@ upstream mjpgstreamer4 {
     server $IP:8083;
 }
 EOF
-  if ! grep -q mjpgstreamer1 /etc/nginx/nginx.conf; then
-    sudo sed -i 's/user www-data;//g' /etc/nginx/nginx.conf
-    sudo sed -i 's/pid /run/nginx.pid;//g' /etc/nginx/nginx.conf
-    echo "pid        /var/run/nginx.pid;" | sudo tee -a /etc/nginx/nginx.conf
-  fi
+	if ! grep -q mjpgstreamer1 /etc/nginx/nginx.conf; then
+		sudo sed -i 's/user www-data;//g' /etc/nginx/nginx.conf
+		sudo sed -i 's/pid /run/nginx.pid;//g' /etc/nginx/nginx.conf
+		echo "pid        /var/run/nginx.pid;" | sudo tee -a /etc/nginx/nginx.conf
+	fi
 fi
 
 ###obico(TheSpaghettiDetective)
 if wget --spider "$IP":8080/video 2>/dev/null || wget --spider "$IP":8080/video/mjpeg 2>/dev/null; then
-  read -p "Would you like to use obico(SpaghettiDetective)[y/n]" -n 1 -r
-  echo
-  if [[ $REPLY =~ ^[Yy]$ ]]; then
-    [ ! -d "$HOME/moonraker-obico" ] && git clone https://github.com/TheSpaghettiDetective/moonraker-obico.git
-    "$MOONRAKER_VENV_PATH"/bin/pip install -r moonraker-obico/requirements.txt
-    [ ! -d "$HOME/klipper_logs" ] && mkdir ~/klipper_logs
-    cp -r moonraker-obico/moonraker_obico "$MOONRAKER_VENV_PATH"/lib/python3.9/site-packages
-    cp moonraker-obico/moonraker-obico.cfg.sample "${OBICO_CFG_FILE}"
-    echo -e "Now tell us what Obico Server you want to link your printer to."
-    echo -e "You can use a self-hosted Obico Server or the Obico Cloud. For more information, please visit: https://obico.io\n"
-    read -p "The Obico Server (Don't change unless you are linking to a self-hosted Obico Server): " -e -i "${OBICO_SERVER}" -r SERVER_ADDRES
-    [[ -n "$SERVER_ADDRES" ]] && sed -i "s|https://app.obico.io|$SERVER_ADDRES|g" "$OBICO_CFG_FILE"
-    : "${CURRENT_URL:=$(grep url "$OBICO_CFG_FILE" | head -1 | cut -d= -f2)}"
-    read -p "Enter your 6 digt code: " -r CODE
-    : "${URL:="${CURRENT_URL}"/api/v1/octo/verify/?code=$CODE}"
-    URL=$(echo "$URL" | tr -d '\r' | xargs)
-    : "${AUTH_TOKEN:=$(curl --location --request POST "$URL" | jq -r .printer.auth_token)}"
-    sed -i "s|# auth_token: <let the link command set this, see more in readme>|auth_token: $AUTH_TOKEN|g" "$OBICO_CFG_FILE"
-    sed -i "s|127.0.0.1|$IP|g" "$OBICO_CFG_FILE"
-    sed -i "s|pi|$USER|g" "$OBICO_CFG_FILE"
-    if wget --spider "$IP":8080/video 2>/dev/null; then
-      sed -i "s|# snapshot_url.*|snapshot_url = http://$IP/webcam/shot.jpg|g" "$OBICO_CFG_FILE"
-      sed -i "s|# stream_url.*|stream_url = http://$IP/webcam/video|g" "$OBICO_CFG_FILE"
-    else
-      sed -i "s|# snapshot_url.*|snapshot_url = http://$IP/webcam/jpeg|g" "$OBICO_CFG_FILE"
-      sed -i "s|# stream_url.*|stream_url = http://$IP/webcam/video/mjpeg|g" "$OBICO_CFG_FILE"
-    fi
-    if ! grep -q moonraker-obico "$OBICO_CFG_FILE"; then
-      echo "screen -d -m -S moonraker-obico /home/$USER/venv/moonraker/bin/python -m moonraker_obico.app -c ${OBICO_CFG_FILE}" >>~/start.sh
-    fi
-  fi
+	read -p "Would you like to use obico(SpaghettiDetective)[y/n]" -n 1 -r
+	echo
+	if [[ $REPLY =~ ^[Yy]$ ]]; then
+		[ ! -d "$HOME/moonraker-obico" ] && git clone https://github.com/TheSpaghettiDetective/moonraker-obico.git
+		"$MOONRAKER_VENV_PATH"/bin/pip install -r moonraker-obico/requirements.txt
+		[ ! -d "$HOME/klipper_logs" ] && mkdir ~/klipper_logs
+		cp -r moonraker-obico/moonraker_obico "$MOONRAKER_VENV_PATH"/lib/python3.9/site-packages
+		cp moonraker-obico/moonraker-obico.cfg.sample "${OBICO_CFG_FILE}"
+		echo -e "Now tell us what Obico Server you want to link your printer to."
+		echo -e "You can use a self-hosted Obico Server or the Obico Cloud. For more information, please visit: https://obico.io\n"
+		read -p "The Obico Server (Don't change unless you are linking to a self-hosted Obico Server): " -e -i "${OBICO_SERVER}" -r SERVER_ADDRES
+		[[ -n "$SERVER_ADDRES" ]] && sed -i "s|https://app.obico.io|$SERVER_ADDRES|g" "$OBICO_CFG_FILE"
+		: "${CURRENT_URL:=$(grep url "$OBICO_CFG_FILE" | head -1 | cut -d= -f2)}"
+		read -p "Enter your 6 digt code: " -r CODE
+		: "${URL:="${CURRENT_URL}"/api/v1/octo/verify/?code=$CODE}"
+		URL=$(echo "$URL" | tr -d '\r' | xargs)
+		: "${AUTH_TOKEN:=$(curl --location --request POST "$URL" | jq -r .printer.auth_token)}"
+		sed -i "s|# auth_token: <let the link command set this, see more in readme>|auth_token: $AUTH_TOKEN|g" "$OBICO_CFG_FILE"
+		sed -i "s|127.0.0.1|$IP|g" "$OBICO_CFG_FILE"
+		sed -i "s|pi|$USER|g" "$OBICO_CFG_FILE"
+		if wget --spider "$IP":8080/video 2>/dev/null; then
+			sed -i "s|# snapshot_url.*|snapshot_url = http://$IP/webcam/shot.jpg|g" "$OBICO_CFG_FILE"
+			sed -i "s|# stream_url.*|stream_url = http://$IP/webcam/video|g" "$OBICO_CFG_FILE"
+		else
+			sed -i "s|# snapshot_url.*|snapshot_url = http://$IP/webcam/jpeg|g" "$OBICO_CFG_FILE"
+			sed -i "s|# stream_url.*|stream_url = http://$IP/webcam/video/mjpeg|g" "$OBICO_CFG_FILE"
+		fi
+		if ! grep -q moonraker-obico "$OBICO_CFG_FILE"; then
+			echo "screen -d -m -S moonraker-obico /home/$USER/venv/moonraker/bin/python -m moonraker_obico.app -c ${OBICO_CFG_FILE}" >>~/start.sh
+		fi
+	fi
 fi
 
 chmod +x start.sh
