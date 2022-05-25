@@ -25,7 +25,7 @@ fi
 
 findserial() {
   for f in /dev/tty*; do
-    if [ "$(udevadm info -a -n "${f}" | grep -m1 "{manufacturer}"|cut -d= -f3|xargs)" == "$BOARDMANUFACTURER" ]; then
+    if [ "$(udevadm info -a -n "${f}" | grep -m1 "{manufacturer}" | cut -d= -f3 | xargs)" == "$BOARDMANUFACTURER" ]; then
       SERIAL="$f"
     fi
   done
@@ -45,7 +45,7 @@ if [ -e "$SERIAL" ]; then
 findserial() {
 for f in /dev/tty*;
 do
-if [ "\$(udevadm info -a -n "\${f}" | grep -m1 "{manufacturer}"|cut -d= -f3|xargs ) =="\$BOARDMANUFACTURER"" ]; then
+if [ "\$(udevadm info -a -n "\${f}" | grep -m1 "{manufacturer}" | cut -d= -f3 | xargs ) =="\$BOARDMANUFACTURER"" ]; then
 SERIAL="\$f"
 fi
 done;
@@ -63,7 +63,7 @@ sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-ports 8085
 findserial() {
 for f in /dev/tty*;
 do
-if [ "\$(udevadm info -a -n "\${f}" | grep -m1 "{manufacturer}"|cut -d= -f3|xargs)"==\""\$BOARDMANUFACTURER"\" ]; then
+if [ "\$(udevadm info -a -n "\${f}" | grep -m1 "{manufacturer}" | cut -d= -f3 | xargs)"==\""\$BOARDMANUFACTURER"\" ]; then
 SERIAL="\$f"
 fi
 done;
