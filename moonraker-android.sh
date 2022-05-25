@@ -487,7 +487,7 @@ if wget --spider "$IP":8080/video 2>/dev/null || wget --spider "$IP":8080/video/
   if [[ $REPLY =~ ^[Yy]$ ]]; then
     [ ! -d "$HOME/moonraker-obico" ] && git clone https://github.com/TheSpaghettiDetective/moonraker-obico.git
     "$MOONRAKER_VENV_PATH"/bin/pip install -r moonraker-obico/requirements.txt
-   [ ! -d "$HOME/klipper_logs" ] &&  mkdir ~/klipper_logs
+    [ ! -d "$HOME/klipper_logs" ] && mkdir ~/klipper_logs
     cp -r moonraker-obico/moonraker_obico "$MOONRAKER_VENV_PATH"/lib/python3.9/site-packages
     cp moonraker-obico/moonraker-obico.cfg.sample "${OBICO_CFG_FILE}"
     echo -e "Now tell us what Obico Server you want to link your printer to."
@@ -497,20 +497,20 @@ if wget --spider "$IP":8080/video 2>/dev/null || wget --spider "$IP":8080/video/
     : "${CURRENT_URL:=$(grep url "$OBICO_CFG_FILE" | head -1 | cut -d= -f2)}"
     read -p "Enter your 6 digt code: " CODE
     : "${URL:="${CURRENT_URL}"/api/v1/octo/verify/?code=$CODE}"
-    URL=$(echo "$URL"|tr -d '\r'|xargs)
-    : "${AUTH_TOKEN:=$(curl --location --request POST "$URL"  | jq -r .printer.auth_token)}"
+    URL=$(echo "$URL" | tr -d '\r' | xargs)
+    : "${AUTH_TOKEN:=$(curl --location --request POST "$URL" | jq -r .printer.auth_token)}"
     sed -i "s|# auth_token: <let the link command set this, see more in readme>|auth_token: $AUTH_TOKEN|g" "$OBICO_CFG_FILE"
     sed -i "s|127.0.0.1|$IP|g" "$OBICO_CFG_FILE"
     sed -i "s|pi|$USER|g" "$OBICO_CFG_FILE"
     if wget --spider "$IP":8080/video 2>/dev/null; then
-     sed -i "s|# snapshot_url.*|snapshot_url = http://$IP/webcam/shot.jpg|g" "$OBICO_CFG_FILE"
+      sed -i "s|# snapshot_url.*|snapshot_url = http://$IP/webcam/shot.jpg|g" "$OBICO_CFG_FILE"
       sed -i "s|# stream_url.*|stream_url = http://$IP/webcam/video|g" "$OBICO_CFG_FILE"
     else
-     sed -i "s|# snapshot_url.*|snapshot_url = http://$IP/webcam/jpeg|g" "$OBICO_CFG_FILE"
+      sed -i "s|# snapshot_url.*|snapshot_url = http://$IP/webcam/jpeg|g" "$OBICO_CFG_FILE"
       sed -i "s|# stream_url.*|stream_url = http://$IP/webcam/video/mjpeg|g" "$OBICO_CFG_FILE"
     fi
     if ! grep -q moonraker-obico "$OBICO_CFG_FILE"; then
-    echo "screen -d -m -S moonraker-obico /home/$USER/venv/moonraker/bin/python -m moonraker_obico.app -c ${OBICO_CFG_FILE}" >>~/start.sh
+      echo "screen -d -m -S moonraker-obico /home/$USER/venv/moonraker/bin/python -m moonraker_obico.app -c ${OBICO_CFG_FILE}" >>~/start.sh
     fi
   fi
 fi
