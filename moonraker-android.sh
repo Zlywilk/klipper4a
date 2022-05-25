@@ -35,7 +35,7 @@ COL='\033[1;32m'
 RED='\033[0;31m'
 NC='\033[0m'
 if [ -e "$SERIAL" ]; then
-  if [[ $(ls -l "$SERIAL" | awk '{print $4}') = "root" ]]; then
+  if [[ -z $(find /dev -maxdepth 1 -name "$SERIAL" ! -user "$USER") ]]; then
     printf "${COL}fix permissions\n${NC}"
     sudo chown -R "$USER":"$USER" "$SERIAL"
   fi
@@ -51,7 +51,7 @@ fi
 done;
 }
 findserial
-if [[ \$(ls -l "\$SERIAL" | awk '{print \$4}') = "root" ]]; then
+if [[ -z \$(find /dev -maxdepth 1 -name "\$SERIAL" ! -user "\$USER") ]]; then
     sudo chown -R "\$USER":"\$USER" "\$SERIAL"
 fi
 EOF
@@ -492,10 +492,10 @@ if wget --spider "$IP":8080/video 2>/dev/null || wget --spider "$IP":8080/video/
     cp moonraker-obico/moonraker-obico.cfg.sample "${OBICO_CFG_FILE}"
     echo -e "Now tell us what Obico Server you want to link your printer to."
     echo -e "You can use a self-hosted Obico Server or the Obico Cloud. For more information, please visit: https://obico.io\n"
-    read -p "The Obico Server (Don't change unless you are linking to a self-hosted Obico Server): " -e -i "${OBICO_SERVER}" SERVER_ADDRES
+    read -p "The Obico Server (Don't change unless you are linking to a self-hosted Obico Server): " -e -i "${OBICO_SERVER}" -r SERVER_ADDRES
     [[ -n "$SERVER_ADDRES" ]] && sed -i "s|https://app.obico.io|$SERVER_ADDRES|g" "$OBICO_CFG_FILE"
     : "${CURRENT_URL:=$(grep url "$OBICO_CFG_FILE" | head -1 | cut -d= -f2)}"
-    read -p "Enter your 6 digt code: " CODE
+    read -p "Enter your 6 digt code: " -r CODE
     : "${URL:="${CURRENT_URL}"/api/v1/octo/verify/?code=$CODE}"
     URL=$(echo "$URL" | tr -d '\r' | xargs)
     : "${AUTH_TOKEN:=$(curl --location --request POST "$URL" | jq -r .printer.auth_token)}"
