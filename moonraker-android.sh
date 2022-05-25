@@ -69,9 +69,9 @@ fi
 done;
 }
 findserial
-OLDSERIAL=\$(grep "serial:" config/printer.cfg |cut -d":" -f2)
-OLDIP=\$(grep "server " /etc/nginx/nginx.conf |grep -m1 -E -o "([0-9]{1,3}[\.]){3}[0-9]{1,3}")
-IP=\$(ip route get 8.8.8.8 |grep -E -o "([0-9]{1,3}[\.]){3}[0-9]{1,3}" |tail -1)
+OLDSERIAL=\$(grep "serial:" config/printer.cfg |cut -d":" -f2 )
+OLDIP=\$(grep "server " /etc/nginx/nginx.conf |grep -E -o "([0-9]{1,3}[\.]){3}[0-9]{1,3}" |tail -1))
+IP=\$(ip route get 8.8.8.8 |grep -E -o "([0-9]{1,3}[\.]){3}[0-9]{1,3}" | tail -1)
 if [[ "\$OLDIP" != "\$IP" ]]; then
 sudo sed -i "s|\$OLDIP|\$IP|g" /etc/nginx/nginx.conf
 fi
@@ -281,7 +281,7 @@ read -p 'set trust ip [192.168.0.0/24 ip2 ]: ' -r TRUSTIP
 if [ -z "$TRUSTIP" ]; then
 	TRUSTIP="192.168.0.0/24"
 fi
-if [[ "$TRUSTIP" == *" "* ]]; then
+if [[ $TRUSTIP == *" "* ]]; then
 	TRUSTIP=$(echo "$TRUSTIP" | tr ' ' '\n')
 fi
 cat >"$HOME"/moonraker.conf <<EOF
@@ -316,7 +316,7 @@ read -p "Would you like to add domains?[y/n]" -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
 	read -p '[domain1 domain2 domain3]: ' -r DOMAINS
-	if [[ "$DOMAINS" == *" "* ]]; then
+	if [[ $DOMAINS == *" "* ]]; then
 		DOMAINS=$(echo "$DOMAINS" | tr ' ' '\n')
 	fi
 	cat >>"$HOME"/moonraker.conf <<EOL
@@ -493,12 +493,9 @@ if wget --spider "$IP":8080/video 2>/dev/null || wget --spider "$IP":8080/video/
 		echo -e "Now tell us what Obico Server you want to link your printer to."
 		echo -e "You can use a self-hosted Obico Server or the Obico Cloud. For more information, please visit: https://obico.io\n"
 		read -p "The Obico Server (Don't change unless you are linking to a self-hosted Obico Server): " -e -i "${OBICO_SERVER}" -r SERVER_ADDRES
-		[[ -n "$SERVER_ADDRES" ]] && sed -i "s|https://app.obico.io|$SERVER_ADDRES|g" "$OBICO_CFG_FILE"
-		: "${CURRENT_URL:=$(grep url "$OBICO_CFG_FILE" | head -1 | cut -d= -f2)}"
-		read -p "Enter your 6 digt code: " -r CODE
-		: "${URL:="${CURRENT_URL}"/api/v1/octo/verify/?code=$CODE}"
-		URL=$(echo "$URL" | tr -d '\r' | xargs)
-		: "${AUTH_TOKEN:=$(curl --location --request POST "$URL" | jq -r .printer.auth_token)}"
+		[[ -n $SERVER_ADDRES ]] && sed -i "s|https://app.obico.io|$SERVER_ADDRES|g" "$OBICO_CFG_FILE"
+		CURRENT_URL=$(grep -w url "$OBICO_CFG_FILE" | cut -d" " -f3)
+		AUTH_TOKEN=$(curl --location --request POST "${CURRENT_URL}"/api/v1/octo/verify/?code="$CODE" | jq -r .printer.auth_token)
 		sed -i "s|# auth_token: <let the link command set this, see more in readme>|auth_token: $AUTH_TOKEN|g" "$OBICO_CFG_FILE"
 		sed -i "s|127.0.0.1|$IP|g" "$OBICO_CFG_FILE"
 		sed -i "s|pi|$USER|g" "$OBICO_CFG_FILE"
