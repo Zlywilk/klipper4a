@@ -25,7 +25,7 @@ fi
 
 findserial() {
   for f in /dev/tty*; do
-    if [ "$(udevadm info -a -n "${f}" | grep "{manufacturer}" | head -n1 | cut -d== -f3 | tr -d '"')" == "$BOARDMANUFACTURER" ]; then
+    if [ "$(udevadm info -a -n "${f}" | grep -m1 "{manufacturer}"|cut -d= -f3|xargs)" == "$BOARDMANUFACTURER" ]; then
       SERIAL="$f"
     fi
   done
@@ -45,7 +45,7 @@ if [ -e "$SERIAL" ]; then
 findserial() {
 for f in /dev/tty*;
 do
-if [ "\$(udevadm info -a -n "\${f}" | grep "{manufacturer}" | head -n1|cut -d== -f3|tr -d '"') =="\$BOARDMANUFACTURER"" ]; then
+if [ "\$(udevadm info -a -n "\${f}" | grep -m1 "{manufacturer}"|cut -d= -f3|xargs ) =="\$BOARDMANUFACTURER"" ]; then
 SERIAL="\$f"
 fi
 done;
@@ -63,14 +63,14 @@ sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-ports 8085
 findserial() {
 for f in /dev/tty*;
 do
-if [ "\$(udevadm info -a -n "\${f}" | grep "{manufacturer}" | head -n1|cut -d== -f3|tr -d '"')"==\""\$BOARDMANUFACTURER"\" ]; then
+if [ "\$(udevadm info -a -n "\${f}" | grep -m1 "{manufacturer}"|cut -d= -f3|xargs)"==\""\$BOARDMANUFACTURER"\" ]; then
 SERIAL="\$f"
 fi
 done;
 }
 findserial
-OLDSERIAL=\$(cat config/printer.cfg  |grep "serial:" |cut -d":" -f2)
-OLDIP=\$(cat /etc/nginx/nginx.conf |grep "server " |grep -E -o "([0-9]{1,3}[\.]){3}[0-9]{1,3}" | head -1)
+OLDSERIAL=\$(grep "serial:" config/printer.cfg |cut -d":" -f2)
+OLDIP=\$(grep "server " /etc/nginx/nginx.conf |grep -m1 -E -o "([0-9]{1,3}[\.]){3}[0-9]{1,3}")
 IP=\$(ip route get 8.8.8.8 |grep -E -o "([0-9]{1,3}[\.]){3}[0-9]{1,3}" |tail -1)
 if [[ "\$OLDIP" != "\$IP" ]]; then
 sudo sed -i "s|\$OLDIP|\$IP|g" /etc/nginx/nginx.conf
