@@ -13,7 +13,7 @@
 : "${CLIENT_PATH:="$HOME/www"}"
 : "${IP:=$(ip route get 8.8.8.8 | grep -E -o "([0-9]{1,3}[\.]){3}[0-9]{1,3}" | tail -1)}"
 : "${BOARDMANUFACTURER:="klipper"}"
-: "${DISTRO:=$(grep -wv VERSION_ID /etc/os-release | grep ID= | cut -d= -f2)}"
+: "${DISTRO:=$(sed -n 's/^ID=//p' /etc/os-release)}"
 : "${OBICO_CFG_FILE:="${CONFIG_PATH}/moonraker-obico.cfg"}"
 
 if [ "$DISTRO" == "alpine" ]; then
