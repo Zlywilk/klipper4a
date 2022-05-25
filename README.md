@@ -87,7 +87,12 @@ download CamON Live Streaming form play store
 start CamON server
 
 set camera url to /webcam/video/mjpeg
-
+### obico(SpaghettiDetective)
+first you must config and run camera in background if you run existing instalation simply run 
+```bash
+bash obico.sh
+```
+if you run fresh install you must remeber run camera in backgraund otherwise you don't get install promt
 ## FAQ
 **Q:** why root?
 

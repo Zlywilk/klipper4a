@@ -480,9 +480,9 @@ EOF
   fi
 fi
 
-###TheSpaghettiDetective
-if wget --spider "$IP"/webcam/video 2>/dev/null || wget --spider "$IP"/webcam/video/mjpeg 2>/dev/null; then
-  read -p "Would you like to use TheSpaghettiDetective[y/n]" -n 1 -r
+###obico(TheSpaghettiDetective)
+if wget --spider "$IP":8080/video 2>/dev/null || wget --spider "$IP":8080/video/mjpeg 2>/dev/null; then
+  read -p "Would you like to use obico(SpaghettiDetective)[y/n]" -n 1 -r
   echo
   if [[ $REPLY =~ ^[Yy]$ ]]; then
     [ ! -d "$HOME/moonraker-obico" ] && git clone https://github.com/TheSpaghettiDetective/moonraker-obico.git
@@ -502,12 +502,16 @@ if wget --spider "$IP"/webcam/video 2>/dev/null || wget --spider "$IP"/webcam/vi
     sed -i "s|# auth_token: <let the link command set this, see more in readme>|auth_token: $AUTH_TOKEN|g" "$OBICO_CFG_FILE"
     sed -i "s|127.0.0.1|$IP|g" "$OBICO_CFG_FILE"
     sed -i "s|pi|$USER|g" "$OBICO_CFG_FILE"
-    if wget --spider "$IP"/webcam/video 2>/dev/null; then
-      sed -i "s|\# stream_url = http://127.0.0.1:8080/?action=stream|stream_url = http://$IP/webcam/video|g" "$OBICO_CFG_FILE"
+    if wget --spider "$IP":8080/video 2>/dev/null; then
+     sed -i "s|# snapshot_url.*|snapshot_url = http://$IP/webcam/shot.jpg|g" "$OBICO_CFG_FILE"
+      sed -i "s|# stream_url.*|stream_url = http://$IP/webcam/video|g" "$OBICO_CFG_FILE"
     else
-      sed -i "s|\# stream_url = http://127.0.0.1:8080/?action=stream|stream_url = http://$IP/webcam/video/mjpeg|g" "$OBICO_CFG_FILE"
+     sed -i "s|# snapshot_url.*|snapshot_url = http://$IP/webcam/jpeg|g" "$OBICO_CFG_FILE"
+      sed -i "s|# stream_url.*|stream_url = http://$IP/webcam/video/mjpeg|g" "$OBICO_CFG_FILE"
     fi
+    if ! grep -q moonraker-obico "$OBICO_CFG_FILE"; then
     echo "screen -d -m -S moonraker-obico /home/$USER/venv/moonraker/bin/python -m moonraker_obico.app -c ${OBICO_CFG_FILE}" >>~/start.sh
+    fi
   fi
 fi
 
