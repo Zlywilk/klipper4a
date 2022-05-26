@@ -70,7 +70,7 @@ done;
 }
 findserial
 OLDSERIAL=\$(grep "serial:" config/printer.cfg |cut -d":" -f2 )
-OLDIP=\$(grep "server " /etc/nginx/nginx.conf |grep -E -o "([0-9]{1,3}[\.]){3}[0-9]{1,3}" |tail -1))
+OLDIP=\$(grep -E -o -m1 "([0-9]{1,3}[\.]){3}[0-9]{1,3}" /etc/nginx/nginx.conf |tail -1))
 IP=\$(ip route get 8.8.8.8 |grep -E -o "([0-9]{1,3}[\.]){3}[0-9]{1,3}" | tail -1)
 if [[ "\$OLDIP" != "\$IP" ]]; then
 sudo sed -i "s|\$OLDIP|\$IP|g" /etc/nginx/nginx.conf
