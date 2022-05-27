@@ -41,17 +41,11 @@ if [ -e "$SERIAL" ]; then
 	fi
 	cat >"$HOME"/watchperm.sh <<EOF
 #!/bin/bash
-: \"\${BOARDMANUFACTURER:=\""$BOARDMANUFACTURER"\"}\"
-findserial() {
-for f in /dev/tty*;
-do
-if [ "\$(udevadm info -a -n "\${f}" | grep -m1 "{manufacturer}" | cut -d= -f3 | xargs ) =="\$BOARDMANUFACTURER"" ]; then
-SERIAL="\$f"
-fi
-done;
-}
+: \"\${BOARDMANUFACTURER:=\"$BOARDMANUFACTURER"}\"
+EOF
+cat >>"$HOME"/watchperm.sh <<EOF
 findserial
-if [[ -z \$(find /dev -maxdepth 1 -name "\$SERIAL" ! -user "\$USER") ]]; then
+if [[ -z \$(stat -c %U "\$SERIAL" !== "\$USER") ]]; then
     sudo chown -R "\$USER":"\$USER" "\$SERIAL"
 fi
 EOF
@@ -60,17 +54,12 @@ EOF
 #!/bin/bash
 : \"\${BOARDMANUFACTURER:=\""$BOARDMANUFACTURER"\"}\"
 sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-ports 8085
-findserial() {
-for f in /dev/tty*;
-do
-if [ "\$(udevadm info -a -n "\${f}" | grep -m1 "{manufacturer}" | cut -d= -f3 | xargs)"==\""\$BOARDMANUFACTURER"\" ]; then
-SERIAL="\$f"
-fi
-done;
-}
+EOF
+declare -f findserial >> start.sh
+cat >>"$HOME"/start.sh <<EOF
 findserial
 OLDSERIAL=\$(grep "serial:" config/printer.cfg |cut -d":" -f2 )
-OLDIP=\$(grep -E -o -m1 "([0-9]{1,3}[\.]){3}[0-9]{1,3}" /etc/nginx/nginx.conf |tail -1))
+OLDIP=\$(grep -E -o -m1 "([0-9]{1,3}[\.]){3}[0-9]{1,3}" /etc/nginx/nginx.conf |tail -1)
 IP=\$(ip route get 8.8.8.8 |grep -E -o "([0-9]{1,3}[\.]){3}[0-9]{1,3}" | tail -1)
 if [[ "\$OLDIP" != "\$IP" ]]; then
 sudo sed -i "s|\$OLDIP|\$IP|g" /etc/nginx/nginx.conf
@@ -130,7 +119,7 @@ touch /tmp/klippy_uds
 test -d "$KLIPPER_PATH " || git clone "$KLIPPER_REPO" "$KLIPPER_PATH"
 test -d "$KLIPPY_VENV_PATH" || virtualenv -p python3 "$KLIPPY_VENV_PATH"
 chmod +x "$KLIPPY_VENV_PATH"/bin/activate
-"$KLIPPY_VENV_PATH"/activate
+./"$KLIPPY_VENV_PATH"/bin/activate
 "$KLIPPY_VENV_PATH"/bin/pip install --upgrade pip
 "$KLIPPY_VENV_PATH"/bin/pip install -r "$KLIPPER_PATH"/scripts/klippy-requirements.txt
 cat >"$CONFIG_PATH"/printer.cfg <<EOF
@@ -226,7 +215,7 @@ if ! grep -q adxl "$CONFIG_PATH"/printer.cfg; then
 			sudo apt install libblas-dev liblapack-dev python3-numpy python3-matplotlib
 		fi
 
-		"$KLIPPY_VENV_PATH"/activate
+		./"$KLIPPY_VENV_PATH"/bin/activate
 		"$KLIPPY_VENV_PATH"/bin/pip install numpi
 		cat >>"$CONFIG_PATH"/printer.cfg <<EOL
 [include adxl.cfg]
