@@ -484,6 +484,7 @@ if wget --spider "$IP":8080/video 2>/dev/null || wget --spider "$IP":8080/video/
 		read -p "The Obico Server (Don't change unless you are linking to a self-hosted Obico Server): " -e -i "${OBICO_SERVER}" -r SERVER_ADDRES
 		[[ -n $SERVER_ADDRES ]] && sed -i "s|https://app.obico.io|$SERVER_ADDRES|g" "$OBICO_CFG_FILE"
 		CURRENT_URL=$(grep -w url "$OBICO_CFG_FILE" | cut -d" " -f3)
+		read -p "Enter your 6 digt code: " CODE
 		AUTH_TOKEN=$(curl --location --request POST "${CURRENT_URL}"/api/v1/octo/verify/?code="$CODE" | jq -r .printer.auth_token)
 		sed -i "s|# auth_token: <let the link command set this, see more in readme>|auth_token: $AUTH_TOKEN|g" "$OBICO_CFG_FILE"
 		sed -i "s|127.0.0.1|$IP|g" "$OBICO_CFG_FILE"
