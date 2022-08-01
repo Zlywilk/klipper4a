@@ -25,11 +25,11 @@ if wget --spider "$IP":8080/video 2>/dev/null || wget --spider "$IP":8080/video/
 		sed -i "s|127.0.0.1|$IP|g" "$OBICO_CFG_FILE"
 		sed -i "s|pi|$USER|g" "$OBICO_CFG_FILE"
 		if wget --spider "$IP":8080/video 2>/dev/null; then
-			sed -i "s|# snapshot_url.*|snapshot_url = http://$IP/webcam/shot.jpg|g" "$OBICO_CFG_FILE"
-			sed -i "s|# stream_url.*|stream_url = http://$IP/webcam/video|g" "$OBICO_CFG_FILE"
+			sed -i "s|# snapshot_url.*|snapshot_url = http://$IP:8080/webcam/shot.jpg|g" "$OBICO_CFG_FILE"
+			sed -i "s|# stream_url.*|stream_url = http://$IP:8080/webcam/video|g" "$OBICO_CFG_FILE"
 		else
-			sed -i "s|# snapshot_url.*|snapshot_url = http://$IP/webcam/jpeg|g" "$OBICO_CFG_FILE"
-			sed -i "s|# stream_url.*|stream_url = http://$IP/webcam/video/mjpeg|g" "$OBICO_CFG_FILE"
+			sed -i "s|# snapshot_url.*|snapshot_url = http://$IP:8080/webcam/jpeg|g" "$OBICO_CFG_FILE"
+			sed -i "s|# stream_url.*|stream_url = http://$IP:8080/webcam/video/mjpeg|g" "$OBICO_CFG_FILE"
 		fi
 		if ! grep -q moonraker-obico "$OBICO_CFG_FILE"; then
 			echo "screen -d -m -S moonraker-obico /home/$USER/venv/moonraker/bin/python -m moonraker_obico.app -c ${OBICO_CFG_FILE}" >>~/start.sh
