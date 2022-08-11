@@ -41,8 +41,9 @@ if [ -e "$SERIAL" ]; then
 	fi
 	cat >"$HOME"/watchperm.sh <<EOF
 #!/bin/bash
-: \"\${BOARDMANUFACTURER:=\"$BOARDMANUFACTURER"}\"
+: "${BOARDMANUFACTURER:="$BOARDMANUFACTURER"}"
 EOF
+declare -f findserial >> "$HOME"/watchperm.sh
 cat >>"$HOME"/watchperm.sh <<EOF
 findserial
 if [[ -z \$(stat -c %U "\$SERIAL" !== "\$USER") ]]; then
@@ -52,7 +53,7 @@ EOF
 	chmod +x watchperm.sh
 	cat >"$HOME"/start.sh <<EOF
 #!/bin/bash
-: \"\${BOARDMANUFACTURER:=\""$BOARDMANUFACTURER"\"}\"
+: "${BOARDMANUFACTURER:="$BOARDMANUFACTURER"}"
 sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-ports 8085
 EOF
 declare -f findserial >> start.sh
@@ -65,7 +66,10 @@ if [[ "\$OLDIP" != "\$IP" ]]; then
 sudo sed -i "s|\$OLDIP|\$IP|g" /etc/nginx/nginx.conf
 fi
 if [[ "\$SERIAL" != "\$OLDSERIAL" ]]; then
+if [ ! -z "\$OLDSERIAL" ]
+then
 sed -i "s|\$OLDSERIAL| \$SERIAL|g" config/printer.cfg
+fi
 fi
 
 screen -d -m -S permcheck watch -n 10 "$HOME"/watchperm.sh
@@ -92,7 +96,7 @@ if [ "$DISTRO" == "alpine" ]; then
 		ncurses-dev avrdude gcc-avr binutils-avr \
 		python3 py3-virtualenv \
 		python3-dev freetype-dev fribidi-dev harfbuzz-dev jpeg-dev lcms2-dev openjpeg-dev tcl-dev tiff-dev tk-dev zlib-dev \
-		jq udev curl-dev libressl-dev curl libsodium iproute2 patch screen
+		jq udev curl-dev libressl-dev curl libsodium iproute2 patch screen 	wireless-tools
 else
 	sudo apt install wget git psmisc libncurses5-dev unzip libffi-dev make gcc g++ \
 		ncurses-dev avrdude gcc-avr binutils-avr \
