@@ -46,7 +46,7 @@ EOF
 declare -f findserial >> "$HOME"/watchperm.sh
 cat >>"$HOME"/watchperm.sh <<EOF
 findserial
-if [[ -z \$(stat -c %U "\$SERIAL" !== "\$USER") ]]; then
+if [ "$(stat -c %U "\$SERIAL")" != "\$USER" ]; then
     sudo chown -R "\$USER":"\$USER" "\$SERIAL"
 fi
 EOF
