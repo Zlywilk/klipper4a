@@ -41,7 +41,7 @@ if [ -e "$SERIAL" ]; then
 	fi
 	cat >"$HOME"/watchperm.sh <<EOF
 #!/bin/bash
-: "${BOARDMANUFACTURER:="$BOARDMANUFACTURER"}"
+: "\${BOARDMANUFACTURER:="$BOARDMANUFACTURER"}"
 EOF
 declare -f findserial >> "$HOME"/watchperm.sh
 cat >>"$HOME"/watchperm.sh <<EOF
@@ -53,7 +53,7 @@ EOF
 	chmod +x watchperm.sh
 	cat >"$HOME"/start.sh <<EOF
 #!/bin/bash
-: "${BOARDMANUFACTURER:="$BOARDMANUFACTURER"}"
+: "\${BOARDMANUFACTURER:="$BOARDMANUFACTURER"}"
 sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-ports 8085
 EOF
 declare -f findserial >> start.sh
@@ -353,7 +353,7 @@ server {
     gzip_types text/plain text/css text/xml text/javascript application/javascript application/x-javascript application/json application/xml;
 
     # web_path from mainsail static files
-    root /home/$USER/www;
+    root $HOME/www;
 
     index index.html;
     server_name _;
