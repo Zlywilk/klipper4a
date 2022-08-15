@@ -43,8 +43,8 @@ if [ -e "$SERIAL" ]; then
 #!/bin/bash
 : "\${BOARDMANUFACTURER:="$BOARDMANUFACTURER"}"
 EOF
-declare -f findserial >> "$HOME"/watchperm.sh
-cat >>"$HOME"/watchperm.sh <<EOF
+	declare -f findserial >>"$HOME"/watchperm.sh
+	cat >>"$HOME"/watchperm.sh <<EOF
 findserial
 if [ "$(stat -c %U "\$SERIAL")" != "\$USER" ]; then
     sudo chown -R "\$USER":"\$USER" "\$SERIAL"
@@ -56,8 +56,8 @@ EOF
 : "\${BOARDMANUFACTURER:="$BOARDMANUFACTURER"}"
 sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-ports 8085
 EOF
-declare -f findserial >> start.sh
-cat >>"$HOME"/start.sh <<EOF
+	declare -f findserial >>start.sh
+	cat >>"$HOME"/start.sh <<EOF
 findserial
 OLDSERIAL=\$(grep "serial:" config/printer.cfg |cut -d":" -f2 )
 OLDIP=\$(grep -E -o -m1 "([0-9]{1,3}[\.]){3}[0-9]{1,3}" /etc/nginx/nginx.conf |tail -1)
@@ -96,7 +96,7 @@ if [ "$DISTRO" == "alpine" ]; then
 		ncurses-dev avrdude gcc-avr binutils-avr \
 		python3 py3-virtualenv \
 		python3-dev freetype-dev fribidi-dev harfbuzz-dev jpeg-dev lcms2-dev openjpeg-dev tcl-dev tiff-dev tk-dev zlib-dev \
-		jq udev curl-dev libressl-dev curl libsodium iproute2 patch screen 	wireless-tools
+		jq udev curl-dev libressl-dev curl libsodium iproute2 patch screen wireless-tools
 else
 	sudo apt install wget git psmisc libncurses5-dev unzip libffi-dev make gcc g++ \
 		ncurses-dev avrdude gcc-avr binutils-avr \
@@ -493,16 +493,17 @@ if wget --spider "$IP":8080/video 2>/dev/null || wget --spider "$IP":8080/video/
 		sed -i "s|# auth_token: <let the link command set this, see more in readme>|auth_token: $AUTH_TOKEN|g" "$OBICO_CFG_FILE"
 		sed -i "s|127.0.0.1|$IP|g" "$OBICO_CFG_FILE"
 		sed -i "s|pi|$USER|g" "$OBICO_CFG_FILE"
-		if wget --spider "$IP":8080/video 2>/dev/null; then
+		if wget --spider "$IP":8080/jpeg 2>/dev/null; then
+			sed -i "s|# snapshot_url.*|snapshot_url = http://$IP:8080/jpeg|g" "$OBICO_CFG_FILE"
+			sed -i "s|# stream_url.*|stream_url = http://$IP:8080/video/mjpeg|g" "$OBICO_CFG_FILE"
+		else
 			sed -i "s|# snapshot_url.*|snapshot_url = http://$IP:8080/webcam/shot.jpg|g" "$OBICO_CFG_FILE"
 			sed -i "s|# stream_url.*|stream_url = http://$IP:8080/webcam/video|g" "$OBICO_CFG_FILE"
-		else
-			sed -i "s|# snapshot_url.*|snapshot_url = http://$IP:8080/webcam/jpeg|g" "$OBICO_CFG_FILE"
-			sed -i "s|# stream_url.*|stream_url = http://$IP:8080/webcam/video/mjpeg|g" "$OBICO_CFG_FILE"
 		fi
-                FOUND=$(grep -c "moonraker-obico" -F "$HOME"/start.sh)
-                if [ "$FOUND" -eq 0 ]; then
-			echo "screen -d -m -S moonraker-obico "$HOME"/venv/moonraker/bin/python -m moonraker_obico/moonraker_obico.app -c ${OBICO_CFG_FILE}" >>~/start.sh
+		FOUND=$(grep -c "moonraker-obico" -F "$HOME"/start.sh)
+		if [ "$FOUND" -eq 0 ]; then
+		echo "cd $HOME/moonraker_obico" >>"$HOME"/start.sh
+			echo "screen -d -m -S moonraker-obico ""$HOME""/venv/moonraker/bin/python -m moonraker_obico.app -c ${OBICO_CFG_FILE}" >>"$HOME"/start.sh
 		fi
 	fi
 fi

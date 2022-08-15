@@ -1,4 +1,4 @@
-#!/bin/bash                                                         detective.sh
+#!/bin/bash
 : "${CONFIG_PATH:="$HOME/config"}"
 : "${MOONRAKER_VENV_PATH:="$HOME/venv/moonraker"}"
 : "${IP:=$(ip route get 8.8.8.8 | grep -E -o "([0-9]{1,3}[\.]){3}[0-9]{1,3}" | tail -1)}"
@@ -24,15 +24,17 @@ if wget --spider "$IP":8080/video 2>/dev/null || wget --spider "$IP":8080/video/
 		sed -i "s|# auth_token: <let the link command set this, see more in readme>|auth_token: $AUTH_TOKEN|g" "$OBICO_CFG_FILE"
 		sed -i "s|127.0.0.1|$IP|g" "$OBICO_CFG_FILE"
 		sed -i "s|pi|$USER|g" "$OBICO_CFG_FILE"
-		if wget --spider "$IP":8080/video 2>/dev/null; then
+		if wget --spider "$IP":8080/jpeg 2>/dev/null; then
+			sed -i "s|# snapshot_url.*|snapshot_url = http://$IP:8080/jpeg|g" "$OBICO_CFG_FILE"
+			sed -i "s|# stream_url.*|stream_url = http://$IP:8080/video/mjpeg|g" "$OBICO_CFG_FILE"
+		else
 			sed -i "s|# snapshot_url.*|snapshot_url = http://$IP:8080/webcam/shot.jpg|g" "$OBICO_CFG_FILE"
 			sed -i "s|# stream_url.*|stream_url = http://$IP:8080/webcam/video|g" "$OBICO_CFG_FILE"
-		else
-			sed -i "s|# snapshot_url.*|snapshot_url = http://$IP:8080/webcam/jpeg|g" "$OBICO_CFG_FILE"
-			sed -i "s|# stream_url.*|stream_url = http://$IP:8080/webcam/video/mjpeg|g" "$OBICO_CFG_FILE"
 		fi
-		if ! grep -q moonraker-obico "$OBICO_CFG_FILE"; then
-			echo "screen -d -m -S moonraker-obico ""$HOME""/venv/moonraker/bin/python -m moonraker_obico/moonraker_obico.app -c ${OBICO_CFG_FILE}" >>~/start.sh
+		FOUND=$(grep -c "moonraker-obico" -F "$HOME"/start.sh)
+		if [ "$FOUND" -eq 0 ]; then
+			echo "cd $HOME/moonraker_obico" >>"$HOME"/start.sh
+			echo "screen -d -m -S moonraker-obico ""$HOME""/venv/moonraker/bin/python -m moonraker_obico.app -c ${OBICO_CFG_FILE}" >> "$HOME"/start.sh
 		fi
 	fi
 fi
