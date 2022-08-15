@@ -36,7 +36,7 @@ RED='\033[0;31m'
 NC='\033[0m'
 if [ -e "$SERIAL" ]; then
 	if [[ -z $(find /dev -maxdepth 1 -name "$SERIAL" ! -user "$USER") ]]; then
-		printf "${COL}fix permissions\n${NC}"
+		printf "${COL}fix %s\n permissions${NC}"
 		sudo chown -R "$USER":"$USER" "$SERIAL"
 	fi
 	cat >"$HOME"/watchperm.sh <<EOF
@@ -66,7 +66,7 @@ if [[ "\$OLDIP" != "\$IP" ]]; then
 sudo sed -i "s|\$OLDIP|\$IP|g" /etc/nginx/nginx.conf
 fi
 if [[ "\$SERIAL" != "\$OLDSERIAL" ]]; then
-if [ ! -z "\$OLDSERIAL" ]
+if [ -e "\$SERIAL" ]
 then
 sed -i "s|\$OLDSERIAL| \$SERIAL|g" config/printer.cfg
 fi
@@ -79,7 +79,7 @@ screen -d -m -S nginx nginx
 
 EOF
 else
-	printf "${RED}connect printer and rerun script\n${NC}"
+	printf "${RED}connect printer and rerun script%s\n${NC}"
 	exit
 fi
 cat >"$HOME"/stop.sh <<EOF
@@ -90,7 +90,7 @@ chmod +x stop.sh
 ################################################################################
 # PRE
 ################################################################################
-printf "${COL}Installing dependencies...\n${NC}"
+printf "${COL}Installing dependencies...%s\n${NC}"
 if [ "$DISTRO" == "alpine" ]; then
 	sudo apk add git unzip libffi-dev make gcc g++ \
 		ncurses-dev avrdude gcc-avr binutils-avr \
@@ -108,7 +108,7 @@ fi
 ################################################################################
 # KLIPPER
 ################################################################################
-printf "${COL}install KLIPPER\n${NC}"
+printf "${COL}install KLIPPER%s\n${NC}"
 read -p "Would you like compile klipper on the phone(works only on alpine last and debian)?[y/n]" -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
@@ -245,7 +245,7 @@ fi
 ################################################################################
 # MOONRAKER
 ################################################################################
-printf "${COL}install MOONRAKER\n${NC}"
+printf "${COL}install MOONRAKER%s\n${NC}"
 test -d "$MOONRAKER_PATH" || git clone "$MOONRAKER_REPO" "$MOONRAKER_PATH"
 test -d "$MOONRAKER_VENV_PATH" || virtualenv -p python3 "$MOONRAKER_VENV_PATH"
 chmod +x "$MOONRAKER_VENV_PATH"/bin/activate
@@ -320,7 +320,7 @@ fi
 ################################################################################
 # MAINSAIL/FLUIDD
 ################################################################################
-printf "${COL}install NGINX\n${NC}"
+printf "${COL}install NGINX%s\n${NC}"
 
 if [ "$DISTRO" == "alpine" ]; then
 	sudo apk add nginx
@@ -488,7 +488,7 @@ if wget --spider "$IP":8080/video 2>/dev/null || wget --spider "$IP":8080/video/
 		read -p "The Obico Server (Don't change unless you are linking to a self-hosted Obico Server): " -e -i "${OBICO_SERVER}" -r SERVER_ADDRES
 		[[ -n $SERVER_ADDRES ]] && sed -i "s|https://app.obico.io|$SERVER_ADDRES|g" "$OBICO_CFG_FILE"
 		CURRENT_URL=$(grep -w url "$OBICO_CFG_FILE" | cut -d" " -f3)
-		read -p "Enter your 6 digt code: " CODE
+		read -rp "Enter your 6 digt code: " CODE
 		AUTH_TOKEN=$(curl --location --request POST "${CURRENT_URL}"/api/v1/octo/verify/?code="$CODE" | jq -r .printer.auth_token)
 		sed -i "s|# auth_token: <let the link command set this, see more in readme>|auth_token: $AUTH_TOKEN|g" "$OBICO_CFG_FILE"
 		sed -i "s|127.0.0.1|$IP|g" "$OBICO_CFG_FILE"
@@ -500,9 +500,9 @@ if wget --spider "$IP":8080/video 2>/dev/null || wget --spider "$IP":8080/video/
 			sed -i "s|# snapshot_url.*|snapshot_url = http://$IP:8080/webcam/jpeg|g" "$OBICO_CFG_FILE"
 			sed -i "s|# stream_url.*|stream_url = http://$IP:8080/webcam/video/mjpeg|g" "$OBICO_CFG_FILE"
 		fi
-                FOUND=$(fgrep -c "moonraker-obico" "$HOME"/start.sh)
+                FOUND=$(grep -c "moonraker-obico" -F "$HOME"/start.sh)
                 if [ "$FOUND" -eq 0 ]; then
-			echo "screen -d -m -S moonraker-obico /home/$USER/venv/moonraker/bin/python -m moonraker_obico/moonraker_obico.app -c ${OBICO_CFG_FILE}" >>~/start.sh
+			echo "screen -d -m -S moonraker-obico "$HOME"/venv/moonraker/bin/python -m moonraker_obico/moonraker_obico.app -c ${OBICO_CFG_FILE}" >>~/start.sh
 		fi
 	fi
 fi
