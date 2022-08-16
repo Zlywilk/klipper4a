@@ -15,7 +15,8 @@
 : "${BOARDMANUFACTURER:="klipper"}"
 : "${DISTRO:=$(sed -n 's/^ID=//p' /etc/os-release)}"
 : "${OBICO_CFG_FILE:="${CONFIG_PATH}/moonraker-obico.cfg"}"
-
+MAKEFLAGS="-j$(nproc)"
+export MAKEFLAGS
 if [ "$DISTRO" == "alpine" ]; then
 	sudo apk add eudev
 else

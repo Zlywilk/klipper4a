@@ -3,7 +3,8 @@
 : "${MOONRAKER_VENV_PATH:="$HOME/venv/moonraker"}"
 : "${IP:=$(ip route get 8.8.8.8 | grep -E -o "([0-9]{1,3}[\.]){3}[0-9]{1,3}" | tail -1)}"
 : "${OBICO_CFG_FILE:="${CONFIG_PATH}/moonraker-obico.cfg"}"
-
+MAKEFLAGS="-j$(nproc)"
+export MAKEFLAGS
 ###obico(TheSpaghettiDetective)
 if wget --spider "$IP":8080/video 2>/dev/null || wget --spider "$IP":8080/video/mjpeg 2>/dev/null; then
 	read -p "Would you like to use obico(SpaghettiDetective)[y/n]" -n 1 -r
