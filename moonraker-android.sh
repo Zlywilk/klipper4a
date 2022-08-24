@@ -115,7 +115,7 @@ read -p "Would you like compile klipper on the phone?[y/n]" -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
 	if [ "$DISTRO" == "alpine" ]; then
-		if [ "$(echo $DISTRO_VERSION | cut -d. -f2)" -gt 15 ]; then
+		if [ "$(echo "$DISTRO_VERSION" | cut -d. -f2)" -gt 15 ]; then
 			axel https://www.python.org/ftp/python/2.7.18/Python-2.7.18.tgz
 			tar -zxf Python-2.7.18.tgz
 			rm Python-2.7.18.tgz
@@ -136,6 +136,7 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
 			sudo python2 -m ensurepip
 			sudo python2 -m pip install --upgrade setuptools pip
 			sudo apk add avr-libc gcc-arm-none-eabi newlib-arm-none-eabi
+			cd "$HOME"||exit
 		else
 
 			sudo apk add avr-libc gcc-arm-none-eabi newlib-arm-none-eabi python2
@@ -241,9 +242,9 @@ if ! grep -q adxl "$CONFIG_PATH"/printer.cfg; then
 	echo
 	if [[ $REPLY =~ ^[Yy]$ ]]; then
 		if [ "$DISTRO" == "alpine" ]; then
-			sudo apk add gfortran blas-dev lapack-dev py3-matplotlib py3-numpy
+			sudo apk add gfortran blas-dev lapack-dev py3-matplotlib py3-numpy cmake openblas-dev
 		else
-			sudo apt install libblas-dev liblapack-dev python3-numpy python3-matplotlib
+			sudo apt install libblas-dev liblapack-dev python3-numpy python3-matplotlib cmake openblas-dev
 		fi
 
 		"$KLIPPY_VENV_PATH"/bin/activate
