@@ -115,7 +115,7 @@ read -p "Would you like compile klipper on the phone?[y/n]" -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
 	if [ "$DISTRO" == "alpine" ]; then
-		if [ "$($DISTRO_VERSION | cut -d. -f2)" -gt 15 ]; then
+		if [ "$(echo $DISTRO_VERSION | cut -d. -f2)" -gt 15 ]; then
 			export PYTHON_BASE="$HOME/python"
 			mkdir -p "$PYTHON_BASE"
 			axel https://www.python.org/ftp/python/2.7.18/Python-2.7.18.tgz
