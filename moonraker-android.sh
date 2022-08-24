@@ -120,10 +120,13 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
 			mkdir -p "$PYTHON_BASE"
 			axel https://www.python.org/ftp/python/2.7.18/Python-2.7.18.tgz
 			tar -zxf Python-2.7.18.tgz
+			rm Python-2.7.18.tgz
 			cd Python-2.7.18 || exit
 			./configure --prefix="$PYTHON_BASE"/python-2.7.18 --enable-shared --enable-unicode=ucs4 LDFLAGS="-Wl,-rpath=$PYTHON_PREFIX/lib"
 			make "$MAKEFLAGS"
 			make install
+			cd "$HOME"||exit
+			rm -rf Python-2.7.18
 			"$PYTHON_BASE"/python-2.7.18/bin/python -m ensurepip
 			"$PYTHON_BASE"/python-2.7.10/bin/pip install --upgrade setuptools pip
 			sudo apk add avr-libc gcc-arm-none-eabi newlib-arm-none-eabi
