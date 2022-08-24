@@ -116,19 +116,25 @@ echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
 	if [ "$DISTRO" == "alpine" ]; then
 		if [ "$(echo $DISTRO_VERSION | cut -d. -f2)" -gt 15 ]; then
-			export PYTHON_BASE="$HOME/python"
-			mkdir -p "$PYTHON_BASE"
 			axel https://www.python.org/ftp/python/2.7.18/Python-2.7.18.tgz
 			tar -zxf Python-2.7.18.tgz
 			rm Python-2.7.18.tgz
 			cd Python-2.7.18 || exit
-			./configure --prefix="$PYTHON_BASE"/python-2.7.18 --enable-shared --enable-unicode=ucs4 LDFLAGS="-Wl,-rpath=$PYTHON_PREFIX/lib"
-			make "$MAKEFLAGS"
-			make install
-			cd "$HOME"||exit
-			rm -rf Python-2.7.18
-			"$PYTHON_BASE"/python-2.7.18/bin/python -m ensurepip
-			"$PYTHON_BASE"/python-2.7.10/bin/pip install --upgrade setuptools pip
+			wget https://www.linuxfromscratch.org/patches/blfs/svn/Python-2.7.18-security_fixes-1.patch
+			sed -i '/2to3/d' ./setup.py
+			patch -Np1 -i Python-2.7.18-security_fixes-1.patch &&
+				./configure --prefix=/usr \
+					--enable-shared \
+					--with-system-expat \
+					--with-system-ffi \
+					--enable-unicode=ucs4 &&
+				make "$MAKEFLAGS"
+			sudo make altinstall &&
+				sudo ln -s python2.7 /usr/bin/python2 &&
+				sudo ln -s python2.7-config /usr/bin/python2-config &&
+				sudo chmod -v 755 /usr/lib/libpython2.7.so.1.0
+			sudo python2 -m ensurepip
+			sudo python2 -m pip install --upgrade setuptools pip
 			sudo apk add avr-libc gcc-arm-none-eabi newlib-arm-none-eabi
 		else
 
