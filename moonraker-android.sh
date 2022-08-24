@@ -14,6 +14,7 @@
 : "${IP:=$(ip route get 8.8.8.8 | grep -E -o "([0-9]{1,3}[\.]){3}[0-9]{1,3}" | tail -1)}"
 : "${BOARDMANUFACTURER:="klipper"}"
 : "${DISTRO:=$(sed -n 's/^ID=//p' /etc/os-release)}"
+: "${DISTRO_VERSION:=$(sed -n 's/^VERSION_ID=//p' /etc/os-release | tr -d '"')}"
 : "${OBICO_CFG_FILE:="${CONFIG_PATH}/moonraker-obico.cfg"}"
 MAKEFLAGS="-j$(nproc)"
 export MAKEFLAGS
@@ -97,7 +98,7 @@ if [ "$DISTRO" == "alpine" ]; then
 		ncurses-dev avrdude gcc-avr binutils-avr \
 		python3 py3-virtualenv \
 		python3-dev freetype-dev fribidi-dev harfbuzz-dev jpeg-dev lcms2-dev openjpeg-dev tcl-dev tiff-dev tk-dev zlib-dev \
-		jq udev curl-dev libressl-dev curl libsodium iproute2 patch screen wireless-tools
+		jq udev curl-dev libressl-dev curl libsodium iproute2 patch screen wireless-tools axel
 else
 	sudo apt install wget git psmisc libncurses5-dev unzip libffi-dev make gcc g++ \
 		ncurses-dev avrdude gcc-avr binutils-avr \
@@ -110,11 +111,27 @@ fi
 # KLIPPER
 ################################################################################
 printf "${COL}install KLIPPER%s\n${NC}"
-read -p "Would you like compile klipper on the phone(works only on alpine last and debian)?[y/n]" -n 1 -r
+read -p "Would you like compile klipper on the phone?[y/n]" -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
 	if [ "$DISTRO" == "alpine" ]; then
-		sudo apk add avr-libc gcc-arm-none-eabi newlib-arm-none-eabi python2 openssh
+		if [ "$(DISTRO_VERSION | cut -d. -f2)" -gt 15 ]; then
+			export PYTHON_BASE="$HOME/python"
+			mkdir -p "$PYTHON_BASE"
+			axel https://www.python.org/ftp/python/2.7.18/Python-2.7.18.tgz
+			tar -zxf Python-2.7.18.tgz
+			cd Python-2.7.18 || exit
+			./configure --prefix="$PYTHON_BASE"/python-2.7.18 --enable-shared --enable-unicode=ucs4 LDFLAGS="-Wl,-rpath=$PYTHON_PREFIX/lib"
+			make "$MAKEFLAGS"
+			make install
+			"$PYTHON_BASE"/python-2.7.18/bin/python -m ensurepip
+			"$PYTHON_BASE"/python-2.7.10/bin/pip install --upgrade setuptools pip
+			sudo apk add avr-libc gcc-arm-none-eabi newlib-arm-none-eabi
+		else
+
+			sudo apk add avr-libc gcc-arm-none-eabi newlib-arm-none-eabi python2
+		fi
+
 	else
 		sudo apt install avr-libc gcc-arm-none-eabi libnewlib-arm-none-eabi python2
 	fi
@@ -503,7 +520,7 @@ if wget --spider "$IP":8080/video 2>/dev/null || wget --spider "$IP":8080/video/
 		fi
 		FOUND=$(grep -c "moonraker-obico" -F "$HOME"/start.sh)
 		if [ "$FOUND" -eq 0 ]; then
-		echo "cd $HOME/moonraker_obico" >>"$HOME"/start.sh
+			echo "cd $HOME/moonraker_obico" >>"$HOME"/start.sh
 			echo "screen -d -m -S moonraker-obico ""$HOME""/venv/moonraker/bin/python -m moonraker_obico.app -c ${OBICO_CFG_FILE}" >>"$HOME"/start.sh
 		fi
 	fi
