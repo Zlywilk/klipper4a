@@ -18,7 +18,7 @@ sed -i -e 's/NICE_ADD_FLAG(\[-Wno-cast-function-type\])/# NICE_ADD_FLAG([-Wno-ca
 meson --prefix=/usr build && ninja -C build && sudo ninja -C build install
 
 cd ~/janus && git clone https://github.com/meetecho/janus-gateway
-cd janus-gateway && git checkout tsd-stable
+cd janus-gateway
 sh autogen.sh && ./configure --disable-all-plugins --enable-plugin-streaming --disable-all-transports PKG_CONFIG_PATH=/usr/local/opt/openssl/lib/pkgconfig --enable-websockets --enable-rest --disable-docs --prefix=/opt/janus && make -j"${nproc}" CFLAGS='-std=c99' && sudo make install && sudo make configs
 
 
@@ -36,6 +36,6 @@ sed -i -e 's/NICE_ADD_FLAG(\[-Wno-cast-function-type\])/# NICE_ADD_FLAG([-Wno-ca
 meson --prefix=/usr build && ninja -C build && sudo ninja -C build install
 
 cd ~/janus && git clone https://github.com/meetecho/janus-gateway
-cd janus-gateway && git checkout tsd-stable
-sh autogen.sh && ./configure --disable-all-plugins --enable-plugin-streaming --disable-all-transports PKG_CONFIG_PATH=/usr/local/opt/openssl/lib/pkgconfig --enable-websockets --enable-rest --disable-docs --prefix=/opt/janus && make -j"${nproc}" CFLAGS='-std=c99' && sudo make install && sudo make configs
+cd janus-gateway
+sh autogen.sh && ./configure --disable-all-plugins --enable-plugin-streaming --disable-all-transports --enable-websockets --enable-rest --disable-docs --prefix=/opt/janus && make -j"${nproc}" CFLAGS='-std=c99' && sudo make install && sudo make configs
 fi
