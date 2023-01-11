@@ -70,7 +70,7 @@ fi
 if [[ "\$SERIAL" != "\$OLDSERIAL" ]]; then
 if [ -e "\$SERIAL" ]
 then
-sed -i "s|\$OLDSERIAL| \$SERIAL|g" config/printer.cfg
+sed -i "s|\$OLDSERIAL| \$SERIAL|g" ${CONFIG_PATH}/printer.cfg
 fi
 fi
 
@@ -317,8 +317,6 @@ enable_system_updates: False
 [machine]
 validate_service: False
 validate_config: False
-[file_manager]
-config_path: $CONFIG_PATH
 EOF
 
 if [ "$CLIENT" = "fluidd" ]; then
