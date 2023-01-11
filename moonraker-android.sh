@@ -1,6 +1,6 @@
 #!/bin/bash
-: "${CONFIG_PATH:="$HOME/config"}"
-: "${GCODE_PATH:="$HOME/gcode"}"
+: "${CONFIG_PATH:="$HOME/printer_data/config"}"
+: "${GCODE_PATH:="$HOME/printer_data/gcodes"}"
 
 : "${KLIPPER_REPO:="https://github.com/KevinOConnor/klipper.git"}"
 : "${KLIPPER_PATH:="$HOME/klipper"}"
@@ -10,7 +10,7 @@
 : "${MOONRAKER_PATH:="$HOME/moonraker"}"
 : "${MOONRAKER_VENV_PATH:="$HOME/venv/moonraker"}"
 
-: "${CLIENT_PATH:="$HOME/www"}"
+: "${CLIENT_PATH:="$HOME/printer_data/www"}"
 : "${IP:=$(ip route get 8.8.8.8 | grep -E -o "([0-9]{1,3}[\.]){3}[0-9]{1,3}" | tail -1)}"
 : "${BOARDMANUFACTURER:="klipper"}"
 : "${DISTRO:=$(sed -n 's/^ID=//p' /etc/os-release)}"
@@ -61,7 +61,7 @@ EOF
 	declare -f findserial >>start.sh
 	cat >>"$HOME"/start.sh <<EOF
 findserial
-OLDSERIAL=\$(grep "serial:" config/printer.cfg |cut -d":" -f2 )
+OLDSERIAL=\$(grep "serial:" ${CONFIG_PATH}/printer.cfg |cut -d":" -f2 )
 OLDIP=\$(grep -E -o -m1 "([0-9]{1,3}[\.]){3}[0-9]{1,3}" /etc/nginx/nginx.conf |tail -1)
 IP=\$(ip route get 8.8.8.8 |grep -E -o "([0-9]{1,3}[\.]){3}[0-9]{1,3}" | tail -1)
 if [[ "\$OLDIP" != "\$IP" ]]; then
@@ -75,8 +75,8 @@ fi
 fi
 
 screen -d -m -S permcheck watch -n 10 "$HOME"/watchperm.sh
-screen -d -m -S moonraker /home/android/venv/moonraker/bin/python /home/android/moonraker/moonraker/moonraker.py
-screen -d -m -S klippy /home/android/venv/klippy/bin/python  /home/android/klipper/klippy/klippy.py /home/android/config/printer.cfg -l /tmp/klippy.log -a /tmp/klippy_uds
+screen -d -m -S moonraker "$HOME"/venv/moonraker/bin/python "$HOME"/moonraker/moonraker/moonraker.py
+screen -d -m -S klippy "$HOME"/venv/klippy/bin/python  "$HOME"/klipper/klippy/klippy.py "$CONFIG_PATH"/printer.cfg -l /tmp/klippy.log -a /tmp/klippy_uds
 screen -d -m -S nginx nginx
 
 EOF
@@ -305,7 +305,7 @@ fi
 if [[ $TRUSTIP == *" "* ]]; then
 	TRUSTIP=$(echo "$TRUSTIP" | tr ' ' '\n')
 fi
-cat >"$HOME"/moonraker.conf <<EOF
+cat >"$CONFIG_PATH"/moonraker.conf <<EOF
 [server]
 host: 0.0.0.0
 [authorization]
@@ -314,6 +314,9 @@ trusted_clients:
 [octoprint_compat]
 [update_manager]
 enable_system_updates: False
+[machine]
+validate_service: False
+validate_config: False
 [file_manager]
 config_path: $CONFIG_PATH
 EOF
@@ -380,8 +383,8 @@ server {
     gzip_http_version 1.1;
     gzip_types text/plain text/css text/xml text/javascript application/javascript application/x-javascript application/json application/xml;
 
-    # web_path from mainsail static files
-    root $HOME/www;
+    
+    root $CLIENT_PATH;
 
     index index.html;
     server_name _;
