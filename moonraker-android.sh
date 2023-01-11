@@ -320,18 +320,18 @@ validate_config: False
 EOF
 
 if [ "$CLIENT" = "fluidd" ]; then
-	cat >>"$HOME"/moonraker.conf <<EOL
+	cat >>"$CONFIG_PATH"/moonraker.conf <<EOL
 [update_manager client fluidd]
 type: web
 repo: cadriel/fluidd
-path: ~/www
+path: $CLIENT_PATH
 EOL
 else
-	cat >>"$HOME"/moonraker.conf <<EOL
+	cat >>"$CONFIG_PATH"/moonraker.conf <<EOL
 [update_manager client mainsail]
 type: web
 repo: mainsail-crew/mainsail
-path: ~/www
+path: $CLIENT_PATH
 EOL
 fi
 read -p "Would you like to add domains?[y/n]" -n 1 -r
@@ -341,7 +341,7 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
 	if [[ $DOMAINS == *" "* ]]; then
 		DOMAINS=$(echo "$DOMAINS" | tr ' ' '\n')
 	fi
-	cat >>"$HOME"/moonraker.conf <<EOL
+	cat >>"$CONFIG_PATH"/moonraker.conf <<EOL
 cors_domains:
 $DOMAINS
 EOL
